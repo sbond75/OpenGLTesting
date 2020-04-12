@@ -1,0 +1,9 @@
+flags: {}
+packages:
+- '.'
+extra-deps:
+- OpenGLRaw-3.3.4.0@sha256:26685d56510ea0332cd8657c5d035c5b48a743725a512e561365ce072e60d27c
+- sdl2-2.5.1.0@sha256:83e3fa428294638ed291bc2b0fa5171c6f6d51af99f46c54503ac8f5fde85c90
+- half-0.3@sha256:48cc70e3cd42ccd13039b8d5865ca3aeffe526572aff7e2baf9cf9c28bc31eeb
+
+resolver: lts-3.1

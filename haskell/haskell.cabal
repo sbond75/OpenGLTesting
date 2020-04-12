@@ -21,7 +21,7 @@ executable haskell
   -- other-modules:
   -- other-extensions:
   build-depends:       OpenGLRaw >= 3.3.4.0,
-                       base >=4.13 && <4.14,
+                       base <= 4.8.1.0,
                        monad-loops >= 0.4.3,
                        sdl2 >= 2.5.1.0
   -- hs-source-dirs:
