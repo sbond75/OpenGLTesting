@@ -24,9 +24,6 @@ import Control.Monad
 import Control.Monad.Loops
 import GHC.Ptr
 import SDL.Event
--- import Graphics.GLU
-
-
 
 displayMe = do glClear GL_COLOR_BUFFER_BIT
                glBegin GL_POLYGON
