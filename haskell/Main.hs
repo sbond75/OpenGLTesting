@@ -38,14 +38,18 @@ withGLMode mode body = do glBegin mode
                           glEnd
                           glFlush
 
+type Coord = (Float, Float)
+
+drawRect :: MonadIO m => Coord -> Coord -> m ()
+drawRect (x1, y1) (x2, y2) = withGLMode GL_POLYGON
+                                        (do glVertex3f x1 y1 0.0
+                                            glVertex3f x2 y1 0.0
+                                            glVertex3f x2 y2 0.0
+                                            glVertex3f x1 y2 0.0)
+
 displayMe :: MonadIO m => m ()
 displayMe = do glClear GL_COLOR_BUFFER_BIT
-               withGLMode GL_POLYGON -- how we connect the points
-                          (do glVertex3f 0.0 0.0 0.0
-                              glVertex3f 0.5 0.0 0.0
-                              glVertex3f 0.5 0.5 0.0
-                              glVertex3f 0.0 0.5 0.0
-                              glVertex3f 0.0 0.0 0.0)
+               drawRect (0.0,0.0) (0.5,0.5)
 
 window :: MonadIO m => CString -> m Window
 window s = createWindow s
@@ -74,7 +78,7 @@ appLoop = do delay 15
 main :: IO ()
 main = do c <- init SDL_INIT_VIDEO
           when (c < 0) exitFailure
-          w <- withCString "SDL_Tutorial" window
+          w <- withCString "SDL Tutorial" window
           when (w == nullPtr)
                (do p <- getError
                    s <- peekCString p
