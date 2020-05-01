@@ -1,12 +1,12 @@
-S:\Projects\OpenGLTesting\OpenGLTesting\haskell\haskell.cabal:
-  hash: 8c80035b002421f1629a590f07f74828c5ac126abe4e587004bbf7ae50631c35
-  size: 837
-  modtime: 1586705157
 S:\Projects\OpenGLTesting\OpenGLTesting\haskell\Main.hs:
-  hash: 403c56fcf6cfbfc48524b7d1aebd88a64ec99e5cd798a6106fe982c95d4dd41a
-  size: 3077
-  modtime: 1586709331
+  hash: 1abff6d34dffe3b68873562aaa5e3c6c229a3c841ef747852a96f2479d7cddd9
+  size: 3183
+  modtime: 1588305873
 S:\Projects\OpenGLTesting\OpenGLTesting\haskell\CHANGELOG.md:
   hash: e9f9d3745c9a6b1a0c205254be24d71069b7041523c3eeb733f1ae228eedda27
   size: 115
   modtime: 1586705144
+S:\Projects\OpenGLTesting\OpenGLTesting\haskell\OpenGLTesting.cabal:
+  hash: ee042b97b9ecd0a5a9fd182d29a6943bb3401700301ca2c2a57499d6daf25686
+  size: 843
+  modtime: 1588305873

@@ -22,11 +22,25 @@ void displayMe(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
+	// Set the drawing color to white.
+	glColor3f(1.0f, 1.0f, 1.0f);
+
 	drawRect(0.0f, 0.0f, 0.5f, 0.5f);
 
-	//glColor3f(0.0f, 0.0f, 1.0f); //yikes
+	// Set the drawing color to blue (r,g,b <-- 1).
+	glColor3f(0.0f, 0.0f, 1.0f);
 
-	//drawRect(0.2f, 0.2f, 0.4f, 0.3f);
+	drawRect(-0.2f, -0.2f, -0.4f, -0.3f);
+
+	// Draw a cool triangle with interpolated colors.
+	glBegin(GL_TRIANGLES);
+	glColor3f(0.8f, 0.1f, 0.0f);
+	glVertex2f(0, 0);
+	glColor3f(0.0f, 0.5f, 0.2f);
+	glVertex2f(1, 0);
+	glColor3f(0.8f, 0.8f, 0.0);
+	glVertex2f(0, 1);
+	glEnd();
 
     glFlush();
 }
