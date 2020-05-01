@@ -8,15 +8,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+void drawRect(float x1, float y1, float x2, float y2)
+{
+	glBegin(GL_POLYGON);
+		glVertex3f(x1, y1, 0.0f);
+		glVertex3f(x2, y1, 0.0f);
+		glVertex3f(x2, y2, 0.0f);
+		glVertex3f(x1, y2, 0.0f);
+	glEnd();
+}
+
 void displayMe(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glBegin(GL_POLYGON);
-        glVertex3f(0.0, 0.0, 0.0);
-        glVertex3f(0.5, 0.0, 0.0);
-        glVertex3f(0.5, 0.5, 0.0);
-        glVertex3f(0.0, 0.5, 0.0);
-    glEnd();
+
+	drawRect(0.0f, 0.0f, 0.5f, 0.5f);
+
+	//glColor3f(0.0f, 0.0f, 1.0f); //yikes
+
+	//drawRect(0.2f, 0.2f, 0.4f, 0.3f);
+
     glFlush();
 }
 
