@@ -70,6 +70,9 @@ int main(int argc, char** argv)
 	// Check the OpenGL version
 	printf("***   OpenGL Version: %s   ***\n", glGetString(GL_VERSION));
 
+	// Set the global clear color.
+	glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+
 	// While application is running
 	while (!quit) {
 		// Handle events on queue
