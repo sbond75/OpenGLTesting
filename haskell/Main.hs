@@ -75,14 +75,79 @@ eventLoop = do e <- pollEvent
                              QuitEvent -> return True
                              _ -> return False
 
-shaderSource = "#version 300 core\n\
+vertexShaderSource = "#version 330 core\n\
 \layout (location = 0) in vec3 aPos;\n\
 \void main()\n\
 \{\n\
 \    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n\
 \}"
 
+fragmentShaderSource = "#version 330 core\n\
+\out vec4 FragColor;\n\
+\void main()\n\
+\{\n\
+\    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
+\}"
+
 allocaPeek inner = alloca $ \ptr -> do inner ptr; peek ptr
+
+-- loadShader :: GLenum -> String -> IO GLuint
+loadShader e code = do shaderID <- glCreateShader e
+                       putStrLn $ "shader id: " <> show shaderID
+                       putStrLn "shader created"
+                       withCString code $
+                         \s -> do
+                           putStrLn "s"
+                           alloca $
+                            \vss -> do -- vertex shader sources
+                              putStrLn "glShaderSource"
+                              glShaderSource shaderID 1 vss nullPtr
+                              putStrLn "compiling shader"
+                              glCompileShader shaderID
+                              alloca $
+                                \success -> do
+                                  glGetShaderiv shaderID GL_COMPILE_STATUS success
+                                  putStrLn "peeking success"
+                                  s <- peek success
+                                  case s == 0 of
+                                    True ->
+                                       alloca $
+                                         \maxLength -> do
+                                           glGetShaderiv shaderID GL_INFO_LOG_LENGTH maxLength
+                                           len <- peek maxLength
+                                           allocaArray (fromIntegral len) $
+                                             \errorLog -> do
+                                               glGetShaderInfoLog shaderID len maxLength errorLog
+                                               glDeleteShader shaderID
+                                               e <- peekCString errorLog
+                                               putStrLn e
+                                           eprintf "Shader failed to initalize"
+                                           return 0
+                                    False -> return shaderID
+
+createAndLinkProgram :: GLuint -> GLuint -> IO GLuint
+createAndLinkProgram vID fID = do
+  putStrLn "entered createAndLink"
+  alloca $
+    \sID -> do
+      -- Create the program
+      pID <- glCreateProgram
+      -- And write the ID to pID
+      poke sID pID
+      glAttachShader pID vID
+      glAttachShader pID fID
+      glLinkProgram pID
+      alloca $
+        \isLinked -> do
+          glGetProgramiv pID GL_LINK_STATUS isLinked
+          s <- peek isLinked
+          guard (s /= 0)
+          glDeleteShader vID
+          glDeleteShader fID
+          peek sID >>= return
+
+  
+  
 -- thing :: MonadIO m => m ()
 thing = alloca $
          \(vbo :: Ptr GLuint) -> do
@@ -95,38 +160,27 @@ thing = alloca $
                 print (sizeOf x)
                 print vbo
                 glGenBuffers 1 vbo
+                putStrLn "peeking vbo"
                 vbo <- peek vbo
                 glBindBuffer GL_ARRAY_BUFFER vbo
                 glBufferData GL_ARRAY_BUFFER 36 vs GL_STATIC_DRAW
-                vertexShader <- glCreateShader GL_VERTEX_SHADER
-                putStrLn "shader created"
-                withCString shaderSource $
-                  \s -> do
-                    putStrLn "s"
-                    alloca $
-                     \vss -> do -- vertex shader sources
-                       putStrLn "vss"
-                       v <- newCString shaderSource
-                       poke vss v
-                       glShaderSource vertexShader 1 vss nullPtr
-                       glCompileShader vertexShader
-                       alloca $
-                         \success -> do
-                           glGetShaderiv vertexShader GL_COMPILE_STATUS success
-                           s <- peek success
-                           when (s /= 0)
-                                (alloca $
-                                  \maxLength -> do
-                                    glGetShaderiv vertexShader GL_INFO_LOG_LENGTH maxLength
-                                    len <- peek maxLength
-                                    allocaArray (fromIntegral len) $
-                                      \errorLog -> do
-                                        glGetShaderInfoLog vertexShader len maxLength errorLog
-                                        glDeleteShader vertexShader
-                                        s <- peekCString errorLog
-                                        putStrLn s
-                                        eprintf "Shader failed to initalize")
-                exitSuccess
+                vertexShaderID <-
+                  loadShader GL_VERTEX_SHADER vertexShaderSource
+                guard (vertexShaderID /= 0)
+                putStrLn "guard 1"
+                fragmentShaderID <-
+                  loadShader GL_FRAGMENT_SHADER fragmentShaderSource
+                guard (fragmentShaderID /= 0)
+                putStrLn "guard 2"
+                alloca $
+                  \(programID :: Ptr GLuint) -> do
+                    p <-
+                      createAndLinkProgram vertexShaderID fragmentShaderID
+                    -- poke programID p
+                    case p == 0 of
+                      True -> putStrLn "Program created"
+                      False -> putStrLn "Program not created"
+
 
   where
     vertices :: [Float]
@@ -140,7 +194,7 @@ appLoop = do delay 15
              glClear GL_COLOR_BUFFER_BIT
              displayMe
 
-main :: IO ()
+-- main :: IO ()
 main = do c <- init SDL_INIT_VIDEO
           when (c < 0) exitFailure
           w <- withCString "SDL Tutorial" window
