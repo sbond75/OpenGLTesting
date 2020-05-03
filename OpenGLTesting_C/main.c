@@ -74,19 +74,107 @@ float vertices[] = {
 	0.0f,  0.5f, 0.0f
 };
 
-const char* vertexShaderSource = "#version 330 core\n\
+const GLchar* vertexShaderSource = "#version 330 core\n\
 layout (location = 0) in vec3 aPos;\n\
 void main()\n\
 {\n\
 	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n\
 }";
 
-const char* fragmentShaderSource = "#version 330 core\n\
+const GLchar* fragmentShaderSource = "#version 330 core\n\
 out vec4 FragColor;\n\
 void main()\n\
 {\n\
 	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
 }";
+
+// Returns the shader that was created.
+GLuint loadShader(GLenum shaderType, const GLchar* shaderSource) {
+	// Create a shader and store it in `shaderID`.
+	GLuint shaderID; // The shader ID.
+	shaderID = glCreateShader(shaderType);
+
+	// Attach the source code to the shader.
+	// Arguments: the shader ID, the number of source code strings, the array (or one) source code string, array of string lengths.
+	glShaderSource(shaderID, 1, &shaderSource, NULL);
+	// Compile the shader.
+	glCompileShader(shaderID);
+
+	// Check for errors: //
+
+	// The simple way:
+	/* GLint success;
+	char  infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
+	if(!success)
+	{
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	} */
+	
+	// The better way:
+	GLint success = 0;
+	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+
+	if (success == GL_FALSE)
+	{
+		GLint maxLength;
+		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
+
+		GLchar* errorLog = alloca(sizeof(GLchar) * maxLength);
+		glGetShaderInfoLog(shaderID, maxLength, &maxLength, errorLog);
+
+		glDeleteShader(shaderID);
+
+		printf("%s\n", errorLog);
+		fatalError("Shader failed to compile");
+		return 0; // 0 indicates no shader.
+	}
+
+	return shaderID;
+}
+
+// Creates a shader program for the given shaders, and always cleans up (deletes) the given shaders,
+// including if an error is encountered.
+GLuint createAndLinkProgram(GLuint vertexShaderID, GLuint fragmentShaderID) {
+	GLuint shaderProgramID;
+	shaderProgramID = glCreateProgram();
+
+	// Attach both shaders to the shaderProgramID.
+	glAttachShader(shaderProgramID, vertexShaderID);
+	glAttachShader(shaderProgramID, fragmentShaderID);
+	glLinkProgram(shaderProgramID);
+
+	// Check for errors in linking.
+	GLint isLinked = 0;
+	glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &isLinked);
+	if (isLinked == GL_FALSE)
+	{
+		GLint maxLength;
+		glGetShaderiv(shaderProgramID, GL_INFO_LOG_LENGTH, &maxLength);
+
+		GLchar* errorLog = alloca(sizeof(GLchar) * maxLength);
+		glGetShaderInfoLog(shaderProgramID, maxLength, &maxLength, errorLog);
+
+		glDeleteShader(shaderProgramID);
+
+		glDeleteProgram(shaderProgramID);
+		glDeleteShader(vertexShaderID);
+		glDeleteShader(fragmentShaderID);
+
+		printf("%s\n", errorLog);
+		fatalError("Shaders failed to link!");
+		return 0;
+	}
+	
+	// "Oh yeah, and don't forget to delete the shader objects once we've
+	// linked them into the program object; we no longer need them anymore:"
+	glDeleteShader(vertexShaderID);
+	glDeleteShader(fragmentShaderID);  
+
+	return shaderProgramID;
+}
 
 void thing()
 {
@@ -106,47 +194,23 @@ void thing()
 	// Arguments: target buffer; amount of data; pointer to the data; usage of data.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// Create a vertex shader and store it in `vertexShader`.
-	GLuint vertexShader; // The shader ID.
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-	// Attach the source code to the shader.
-	// Arguments: the shader ID, the number of source code strings, the array (or one) source code string, array of string lengths.
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	// Compile the shader.
-	glCompileShader(vertexShader);
-
-	// Check for errors: //
-
-	// The simple way:
-	/* GLint success;
-	char  infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-	if(!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	} */
-	
-	// The better way:
-	GLint success;
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-	if (success == GL_FALSE)
-	{
-		GLint maxLength;
-		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
-
-		GLchar* errorLog = alloca(sizeof(GLchar) * maxLength);
-		glGetShaderInfoLog(vertexShader, maxLength, &maxLength, &errorLog[0]);
-
-		glDeleteShader(vertexShader);
-
-		printf("%s\n", errorLog);
-		fatalError("Shader failed to compile");
-		__debugbreak();
+	GLuint vertexShaderID = loadShader(GL_VERTEX_SHADER, vertexShaderSource);
+	if (!vertexShaderID) {
+		__debugbreak(); // Error
 	}
+	GLuint fragmentShaderID = loadShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+	if (!fragmentShaderID) {
+		__debugbreak(); // Error
+	}
+
+	GLuint programID = createAndLinkProgram(vertexShaderID, fragmentShaderID);
+	if (!programID) {
+		__debugbreak(); // Error
+	}
+
+	// Bind this program as active.
+	glUseProgram(programID);
+
 	pause();
 
 	// //
