@@ -7,6 +7,150 @@
 #include <GL/glew.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "s_new_from_stdin.h" // Because we don't have std::getline from C++...
+#include <stdint.h>
+
+#pragma region Utils
+// To have getch()            //
+#include <conio.h> //getch
+#include <stdio.h> //puts
+#ifdef _MSC_VER //visual c++ needs getch correctly defined, and _MSC_VER is defined under visual c++ only!
+#define getch() _getch()
+#endif
+//                            //
+// To have a nice system("PAUSE") for any platform! //
+void pause() {
+	puts("Press any key to continue...");
+	getch();
+}
+// //
+// To have nice number input  // ( http://www.cplusplus.com/forum/articles/6046/ )
+int getNumberFromUser(const char* msg, int defaultIfInvalid) {
+	char* input;
+	int num = defaultIfInvalid;
+	char* p;
+	size_t len;
+
+	puts(msg);
+
+	input = s_new_from_stdin(false, &len, NULL);
+	if (input) {
+		long converted = strtol(input, &p, 10);
+		if (*p) {
+			// conversion failed because the input wasn't a number
+			printf("Invalid input; using %d!\n", defaultIfInvalid);
+		}
+		else if (len == 0) { //then the user just pressed enter and that was it
+			printf("Using %d!\n", defaultIfInvalid);
+		}
+		else {
+			// use converted
+			num = (int)converted;
+		}
+
+		free(input);
+	}
+	else {
+		puts( "<NULL>" );
+	}
+
+	return num;
+}
+
+//Prints out an error message and exits the game
+void fatalError(const char* errorString) {
+	//std::cout << errorString << std::endl;
+	//std::cout << "Enter any key to quit...";
+	//int tmp;
+	//std::cin >> tmp;
+	//SDL_Quit();
+	//exit(69);
+}
+#pragma endregion
+
+float vertices[] = {
+	-0.5f, -0.5f, 0.0f,
+	0.5f, -0.5f, 0.0f,
+	0.0f,  0.5f, 0.0f
+};
+
+const char* vertexShaderSource = "#version 330 core\n\
+layout (location = 0) in vec3 aPos;\n\
+void main()\n\
+{\n\
+	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n\
+}";
+
+const char* fragmentShaderSource = "#version 330 core\n\
+out vec4 FragColor;\n\
+void main()\n\
+{\n\
+	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n\
+}";
+
+void thing()
+{
+	GLuint VBO;
+	// Generate 1 VBO (arg 1); put its ID into the array
+	// (an array of one element is ok) given (arg 2).
+	glGenBuffers(1, &VBO);
+
+	// Make the buffer bound into GL_ARRAY_BUFFER as the current active buffer
+	// for GL_ARRAY_BUFFER; VBO is the buffer to use to bind.
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	//printf("%d", sizeof(vertices)); // Evaluates to 36 because 9 floats, each 4 bytes in size.
+	//pause();
+
+	// Uploads the data to the GPU.
+	// Arguments: target buffer; amount of data; pointer to the data; usage of data.
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	// Create a vertex shader and store it in `vertexShader`.
+	GLuint vertexShader; // The shader ID.
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+
+	// Attach the source code to the shader.
+	// Arguments: the shader ID, the number of source code strings, the array (or one) source code string, array of string lengths.
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	// Compile the shader.
+	glCompileShader(vertexShader);
+
+	// Check for errors: //
+
+	// The simple way:
+	/* GLint success;
+	char  infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
+	if(!success)
+	{
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	} */
+	
+	// The better way:
+	GLint success;
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+
+	if (success == GL_FALSE)
+	{
+		GLint maxLength;
+		glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		GLchar* errorLog = alloca(sizeof(GLchar) * maxLength);
+		glGetShaderInfoLog(vertexShader, maxLength, &maxLength, &errorLog[0]);
+
+		glDeleteShader(vertexShader);
+
+		printf("%s\n", errorLog);
+		fatalError("Shader failed to compile");
+		__debugbreak();
+	}
+	pause();
+
+	// //
+}
 
 void drawRect(float x1, float y1, float x2, float y2)
 {
@@ -22,27 +166,7 @@ void displayMe(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-	// Set the drawing color to white.
-	glColor3f(1.0f, 1.0f, 1.0f);
-
-	drawRect(0.0f, 0.0f, 0.5f, 0.5f);
-
-	// Set the drawing color to blue (r,g,b <-- 1).
-	glColor3f(0.0f, 0.0f, 1.0f);
-
-	drawRect(-0.2f, -0.2f, -0.4f, -0.3f);
-
-	// Draw a cool triangle with interpolated colors.
-	glBegin(GL_TRIANGLES);
-	glColor3f(0.8f, 0.1f, 0.0f);
-	glVertex2f(0, 0);
-	glColor3f(0.0f, 0.5f, 0.2f);
-	glVertex2f(1, 0);
-	glColor3f(0.8f, 0.8f, 0.0);
-	glVertex2f(0, 1);
-	glEnd();
-
-    glFlush();
+	thing();
 }
 
 //Screen dimension constants
