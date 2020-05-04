@@ -1,3 +1,8 @@
+#include <ghc/HsFFI.h>
+#ifdef __GLASGOW_HASKELL__
+#include "Picture_stub.h"
+#endif
+
 #include <SDL2/SDL.h>
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
@@ -25,6 +30,7 @@ void drawPixel(int x, int y, SDL_Renderer* renderer, Uint8 r, Uint8 g, Uint8 b) 
 
 int main(int argc, char** argv)
 {
+        hs_init(&argc, &argv);
 	// The window we'll be rendering to
 	SDL_Window* window = NULL;
 
@@ -88,5 +94,6 @@ int main(int argc, char** argv)
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+    hs_exit();
     return 0;
 }
