@@ -1,7 +1,4 @@
-
-all: main; ./main
-
-main: main.c Picture.o; gcc \
+all: main.c Picture.o; gcc \
   -liconv \
   -lHSrts \
   -L/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3/rts \

@@ -1,7 +1,6 @@
 #include <HsFFI.h>
-#ifdef __GLASGOW_HASKELL__
 #include "Picture_stub.h"
-#endif
+
 
 #include <SDL2/SDL.h>
 // #pragma comment(lib, "SDL2.lib")
@@ -20,7 +19,7 @@ typedef struct Color {
 } Color;
 
 Color funcFromPointToColor(int x, int y) {
-	return (Color) { .r = x + 10, .g = y + 23, .b = x + 2 };
+  return (Color) { .r = calcR(x,y), .g = calcG(x,y), .b = calcB(x,y) };
 }
 
 void drawPixel(int x, int y, SDL_Renderer* renderer, Uint8 r, Uint8 g, Uint8 b) {
