@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL/SDL.h>
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
 #include <stdio.h>
