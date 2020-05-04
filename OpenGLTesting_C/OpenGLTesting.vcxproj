@@ -125,6 +125,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="opengl_main.c" />
     <ClInclude Include="s_new_from_stdin.h">
       <FileType>CppCode</FileType>
     </ClInclude>
