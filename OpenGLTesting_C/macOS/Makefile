@@ -3,7 +3,6 @@ all: main.c Picture.o; gcc \
   -lHSrts \
   -L/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3/rts \
   -I/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3/include \
-  -L/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3 \
   -L/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3/base-4.13.0.0 \
   -lHSbase-4.13.0.0 \
   -L/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3/ghc-prim-0.5.3 \
