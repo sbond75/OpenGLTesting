@@ -32,6 +32,7 @@ calcB x y = calcWith f (x,y)
 
 --                                  R    G    B
 newtype Color = Color { unColor :: (Float, Float, Float) } deriving Show
+-- ^^^This is like making a struct with an int inside it or something -- this means we can't just treat it as an int.
 
 type Point = (Float, Float)
 
@@ -39,6 +40,7 @@ type Image a = Point -> a
 type Region = Image Bool
 type Filter c = Image c -> Image c
 type FilterC = Filter Color
+type ImageC = Image Color -- Same as Point -> Color
 
 regionToImage :: Region -> Image Color
 regionToImage f = (\b -> if b then white else black) . f
@@ -69,3 +71,52 @@ crop reg im = cond reg im mempty
 
 checker :: Region
 checker (x,y) = (even (floor x + floor y)) --(even (floor x)) || (even (floor y))
+
+-- Make Image' just to show how functor works because Haskell already
+-- implements Functor, Applicative, etc. FOR YOU and doing this for "Image"
+-- and not "Image'" would cause an error.
+newtype Image' a = MkImage' (Point -> a)
+instance Functor Image' where
+  fmap :: (a -> b) -> Image' a -> Image' b
+  fmap f (MKImage' i) = MkImage' (f . i) --(\p -> f (i p))
+  -- (f . g) = \x -> f (g x) where x is the point.
+
+newtype Person = Person {-<-- The tag-} String
+getName (Person name) = name
+foo (Person name) = Person (name ++ name)
+
+--instance Applicative Image' where
+
+-- Endofunctor in Haskell:
+-- A functor between two categories C and D such that
+-- when I do F (f . g) = F f . F g               ("." is compose)
+-- F idC               = idD
+
+-- in haskell it is: fmap (f . g) = fmap f . fmap g
+-- fmap id                        = id
+
+-- fmap (f . g)
+
+-- Applicative has two methods:
+-- pure
+-- liftA2
+
+instance Applicative Image' where
+  pure :: a -> Image' a
+  pure x = MkImage' (\p -> x)
+  liftA2 :: (a -> b -> c) -> Image' a -> Image' b -> Image' c
+  liftA2 f (MkImage' a) (MkImage' b) -> MkImage' (\p -> (f (a p) (b p)))
+
+liftA2' :: (a -> b -> c) -> Image a -> Image b -> Image c
+liftA2' f a b = (\p -> f (a p) (b p))
+
+overlay :: ImageC -> ImageC -> ImageC
+overlay = liftA2' addColor
+  where 
+    --this wouldn't work because Color is an opaque type...: addColor :: (Float, Float, Float) -> (Float, Float, Float) -> (Float, Float, Float)
+    addColor :: ImageC -> ImageC -> ImageC
+    addColor (Color (a,b,c)) (Color (x,y,z)) = Color (a + x, b + y, c + z)
+
+-- From Haskell standard library:
+--instance Functor ((->) r) where
+  -- ...

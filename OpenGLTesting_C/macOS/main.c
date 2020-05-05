@@ -10,20 +10,35 @@
 #include "s_new_from_stdin.h" // Because we don't have std::getline from C++...
 #include <stdint.h>
 
+#define USE_ALPHA
+
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
 typedef struct Color {
-	Uint8 r, g, b;
+	Uint8 r, g, b
+#ifdef USE_ALPHA
+	,a
+#endif
+	;
 } Color;
 
 Color funcFromPointToColor(int x, int y) {
-  return (Color) { .r = calcR(x,y), .g = calcG(x,y), .b = calcB(x,y) };
+  return (Color) { .r = calcR(x,y), .g = calcG(x,y), .b = calcB(x,y)
+#ifdef USE_ALPHA
+	, .a = calcA(x,y)
+#endif
+   };
 }
 
-void drawPixel(int x, int y, SDL_Renderer* renderer, Uint8 r, Uint8 g, Uint8 b) {
-	SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
+void drawPixel(int x, int y, SDL_Renderer* renderer, Color c) {
+#ifdef USE_ALPHA
+	const Uint8 alpha = c.a;
+#else
+	const Uint8 alpha = SDL_ALPHA_OPAQUE;
+#endif
+	SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, alpha);
 	SDL_RenderDrawPoint(renderer, x, y);
 }
 
@@ -59,14 +74,16 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+#ifdef USE_ALPHA
 	// Disable alpha blending for performance.
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+#endif
 
 	// Render the pixels:
 	for (int i = 0; i < SCREEN_WIDTH; ++i) {
 		for (int j = 0; j < SCREEN_HEIGHT; ++j) {
 			Color c = funcFromPointToColor(i, j);
-			drawPixel(i, j, renderer, c.r, c.g, c.b);
+			drawPixel(i, j, renderer, c);
 		}
 	}
 
