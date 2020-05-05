@@ -7,7 +7,7 @@ GHC883=-L"$(ghcRoot)/base-4.13.0.0" -L"$(ghcRoot)/ghc-prim-0.5.3" -L"$(ghcRoot)/
 GHCFLAGS=$(GHC865)
 #GHCFLAGS=$(GHC883)
 
-all: main.c Picture.o; gcc \
+all: main.c Picture.o; gcc -O3 \
   -liconv \
   -lHSrts \
   -L"$(ghcRoot)/rts" \
@@ -18,7 +18,7 @@ all: main.c Picture.o; gcc \
   -Wall \
   -o main main.c Picture.o
 
-Picture.o: Picture.hs; ghc -fforce-recomp Picture.hs
+Picture.o: Picture.hs; ghc -O3 -fforce-recomp Picture.hs
 
 .PHONY: clean
 clean: ; rm -rf main && rm -rf *.o && rm -rf *.hi && rm -rf *_stub.h

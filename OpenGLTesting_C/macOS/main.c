@@ -81,10 +81,19 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-#ifdef USE_ALPHA
+	SDL_Texture* screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	// Make the renderer render to a texture:
+	SDL_SetRenderTarget(renderer, screen);
+
+#ifndef USE_ALPHA
 	// Disable alpha blending for performance.
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 #endif
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
+	// This line is only needed if we want to render over time.
+	SDL_RenderClear(renderer);
 
 	// Render the pixels:
 	for (int i = 0; i < SCREEN_WIDTH; ++i) {
@@ -92,8 +101,18 @@ int main(int argc, char** argv)
 			Color c = funcFromPointToColor(i, j);
 			drawPixel(i, j, renderer, c);
 		}
+		/*
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderCopy(renderer, screen, NULL, NULL);
 		SDL_RenderPresent(renderer);
+		SDL_SetRenderTarget(renderer, screen);
+		*/
 	}
+
+	SDL_SetRenderTarget(renderer, NULL);
+	SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_RenderPresent(renderer);
+	SDL_SetRenderTarget(renderer, screen);
 
 	// Present our pixels
 	SDL_RenderPresent(renderer);
