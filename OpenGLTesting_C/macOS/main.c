@@ -1,22 +1,15 @@
 #include <HsFFI.h>
 #include "Picture_stub.h"
-
-
 #include <SDL2/SDL.h>
-// #pragma comment(lib, "SDL2.lib")
-// #pragma comment(lib, "SDL2main.lib")
 #include <stdio.h>
 #include <stdbool.h>
 #include "s_new_from_stdin.h" // Because we don't have std::getline from C++...
 #include <stdint.h>
+#include "color.h"
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-
-typedef struct Color {
-	Uint8 r, g, b;
-} Color;
 
 Color funcFromPointToColor(int x, int y) {
   return (Color) { .r = calcR(x,y), .g = calcG(x,y), .b = calcB(x,y) };

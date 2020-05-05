@@ -246,3 +246,4 @@ ModelManifest.xml
 /haskell/.stack-work/
 *.o
 *.hi
+.DS_Store
