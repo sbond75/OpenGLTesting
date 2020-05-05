@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fasm #-}
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface,
+             InstanceSigs #-}
 
 module Picture where
 
@@ -78,7 +79,7 @@ checker (x,y) = (even (floor x + floor y)) --(even (floor x)) || (even (floor y)
 newtype Image' a = MkImage' (Point -> a)
 instance Functor Image' where
   fmap :: (a -> b) -> Image' a -> Image' b
-  fmap f (MKImage' i) = MkImage' (f . i) --(\p -> f (i p))
+  fmap f (MkImage' i) = MkImage' (f . i) --(\p -> f (i p))
   -- (f . g) = \x -> f (g x) where x is the point.
 
 newtype Person = Person {-<-- The tag-} String
@@ -105,17 +106,19 @@ instance Applicative Image' where
   pure :: a -> Image' a
   pure x = MkImage' (\p -> x)
   liftA2 :: (a -> b -> c) -> Image' a -> Image' b -> Image' c
-  liftA2 f (MkImage' a) (MkImage' b) -> MkImage' (\p -> (f (a p) (b p)))
+  liftA2 f (MkImage' a) (MkImage' b) = MkImage' (\p -> (f (a p) (b p)))
 
 liftA2' :: (a -> b -> c) -> Image a -> Image b -> Image c
 liftA2' f a b = (\p -> f (a p) (b p))
 
+{-
 overlay :: ImageC -> ImageC -> ImageC
 overlay = liftA2' addColor
   where 
     --this wouldn't work because Color is an opaque type...: addColor :: (Float, Float, Float) -> (Float, Float, Float) -> (Float, Float, Float)
     addColor :: ImageC -> ImageC -> ImageC
     addColor (Color (a,b,c)) (Color (x,y,z)) = Color (a + x, b + y, c + z)
+-}
 
 -- From Haskell standard library:
 --instance Functor ((->) r) where

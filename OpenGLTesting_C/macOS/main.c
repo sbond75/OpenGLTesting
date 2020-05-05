@@ -24,6 +24,8 @@ typedef struct Color {
 	;
 } Color;
 
+Uint8 calcA(int x, int y) {return 0;}
+
 Color funcFromPointToColor(int x, int y) {
   return (Color) { .r = calcR(x,y), .g = calcG(x,y), .b = calcB(x,y)
 #ifdef USE_ALPHA
@@ -64,13 +66,18 @@ int main(int argc, char** argv)
 	}
 
 	// Create window
-	// "SDL Tutorial"
-	if (SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer)) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
-		return 3;
-	}
+	window = SDL_CreateWindow(NULL /*"SDL Tutorial"*/,
+							  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
+						 	  SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN); 
 	if (window == NULL) {
 		fprintf(stderr, "Window could not be created! SDL_Error: %s\n", SDL_GetError());
+		return 1;
+	}
+
+	// Create renderer
+	renderer = SDL_CreateRenderer(window, -1, /*SDL_RENDERER_SOFTWARE*/ SDL_RENDERER_ACCELERATED);
+	if (renderer == NULL) {
+		fprintf(stderr, "Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
 		return 1;
 	}
 
@@ -85,6 +92,7 @@ int main(int argc, char** argv)
 			Color c = funcFromPointToColor(i, j);
 			drawPixel(i, j, renderer, c);
 		}
+		SDL_RenderPresent(renderer);
 	}
 
 	// Present our pixels
@@ -96,9 +104,26 @@ int main(int argc, char** argv)
 		while (SDL_PollEvent(&e) != 0)
 		{
 			// User requests quit
-			if (e.type == SDL_QUIT)
-			{
+			Sint32 k;
+			Uint32 ticksBefore, ticksAfter;
+			switch (e.type) {
+			case SDL_KEYDOWN:
+				k = e.key.keysym.sym;
+				if (k == SDLK_r) {
+					// Redraw
+					ticksBefore = SDL_GetTicks();
+					SDL_RenderPresent(renderer);
+					ticksAfter = SDL_GetTicks();
+					printf("Time elapsed for redraw: %d\n", ticksAfter - ticksBefore);
+					fflush(stdout);
+				}
+				break;
+			case SDL_KEYUP:
+				//Sint32 k = e.key.keysym.sym;
+				break;
+			case SDL_QUIT:
 				quit = true;
+				break;
 			}
 		}
 
