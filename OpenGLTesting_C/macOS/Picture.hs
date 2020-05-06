@@ -162,7 +162,7 @@ disks = renderRegion $ f <$> udisk
                          <*> vstrip
   where f a b c d = a || b || c || d
 
-mainImage = fig23
+mainImage = fig8
 
 calculate extract = floor . (* 255) . extract . adjust mainImage . toFloat
   where
@@ -251,6 +251,7 @@ polarize pat n = pat . sc . toPolar
 -- Animations
 type Time = Float
 type Anim c = Time -> Image c
+
 swirlingXPos :: Anim Bool
 swirlingXPos t = swirl (t * t) xPos
 

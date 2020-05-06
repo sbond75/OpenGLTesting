@@ -13,7 +13,8 @@ all: main.c Picture.o; gcc \
   -fno-stack-protector \
   -lSDL2 -lgmp -lffi \
   -Wall \
-  -o main main.c Picture.o
+  -o main main.c Picture.o \
+  -O3
 
 Picture.o: Picture.hs; ghc -fforce-recomp Picture.hs
 
