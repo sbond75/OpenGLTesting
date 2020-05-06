@@ -10,7 +10,7 @@
 #include "s_new_from_stdin.h" // Because we don't have std::getline from C++...
 #include <stdint.h>
 
-#define USE_ALPHA
+//#define USE_ALPHA
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
@@ -25,7 +25,6 @@ typedef struct Color {
 } Color;
 
 Uint8 calcA(int x, int y, int t) { return 0; }
-
 
 Uint8 calcR(x,y,t) {
 	return x+20;
@@ -46,28 +45,39 @@ Color funcFromPointToColor(int x, int y, int t) {
    };
 }
 
-void drawPixel(int x, int y, SDL_Renderer* renderer, Color c) {
+void drawPixel(size_t x, size_t y, Uint8* pixels, Color c) {
+	size_t offset = y * SCREEN_WIDTH + x*3;
+	pixels[offset]     = c.r; // r, _, _, r, _, _, ...
+	pixels[offset + 1] = c.g;
+	pixels[offset + 2] = c.b;
 #ifdef USE_ALPHA
-	const Uint8 alpha = c.a;
-#else
-	const Uint8 alpha = SDL_ALPHA_OPAQUE;
+	pixels[offset + 3] = c.a;
 #endif
-	SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, alpha);
-	SDL_RenderDrawPoint(renderer, x, y);
 }
 
 // t is time.
-void render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
+int render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
 	Uint32 start = SDL_GetTicks();
 	// This line is only needed if we want to render over time,
 	// pixel by pixel and present between pixels.
 	//SDL_RenderClear(renderer);
 
-	// Render the pixels:
-	for (int i = 0; i < SCREEN_WIDTH; ++i) {
-		for (int j = 0; j < SCREEN_HEIGHT; ++j) {
+	// Lock the texture for rendering so that we can write pixels to it.
+	int pitch = SCREEN_WIDTH * sizeof(Color); // Width (in bytes) of a single row in the texture.
+	Uint8* pixels = NULL; // r, g, b, r, g, b, ...
+	if (SDL_LockTexture(screen,
+                		NULL,      // NULL means the *whole texture* here.
+                		(void**)&pixels,
+                		&pitch)) { // After SDL_LockTexture, `pixels` can be used for writing.
+		fprintf(stderr, "Error locking texture! SDL_Error: %s\n", SDL_GetError());
+		return 1;
+	}
+
+	// Fill the `pixels` array:
+	for (size_t j = 0; j < SCREEN_HEIGHT; ++j) {
+		for (size_t i = 0; i < SCREEN_WIDTH; ++i) {
 			Color c = funcFromPointToColor(i, j, t);
-			drawPixel(i, j, renderer, c);
+			drawPixel(i, j, pixels, c);
 		}
 		/*
 		SDL_SetRenderTarget(renderer, NULL);
@@ -77,10 +87,14 @@ void render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
 		*/
 	}
 
-	SDL_SetRenderTarget(renderer, NULL);
-	SDL_RenderCopy(renderer, screen, NULL, NULL);
-	SDL_RenderPresent(renderer);
-	SDL_SetRenderTarget(renderer, screen);
+	// Clean up with SDL_UnlockTexture:
+	SDL_UnlockTexture(screen);
+	
+	// Then you can RenderCopy this texture as normal:
+	if (SDL_RenderCopy(renderer, screen, NULL, NULL)) {
+		fprintf(stderr, "Error in SDL_RenderCopy()! SDL_Error: %s\n", SDL_GetError());
+		return 1;
+	}
 
 	// Present our pixels
 	SDL_RenderPresent(renderer);
@@ -88,6 +102,8 @@ void render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
 	Uint32 end = SDL_GetTicks();
 	Uint32 elapsed = end - start;
 	printf("Elapsed milliseconds: %d\n", elapsed);
+
+	return 0;
 }
 
 int main(int argc, char** argv)
@@ -129,16 +145,18 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	SDL_Texture* screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	// Make the renderer render to a texture:
-	SDL_SetRenderTarget(renderer, screen);
+	// Create the texture.
+#ifdef USE_ALPHA
+	Uint32 form = SDL_PIXELFORMAT_RGBA8888;
+#else
+	Uint32 form = SDL_PIXELFORMAT_RGB24;
+#endif
+	SDL_Texture* screen = SDL_CreateTexture(renderer, form, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 #ifndef USE_ALPHA
 	// Disable alpha blending for performance.
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 #endif
-	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 
 	int t = 0;
 	render(renderer, screen, t);
