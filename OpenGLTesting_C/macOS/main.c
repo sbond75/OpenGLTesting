@@ -1,5 +1,5 @@
 #include <HsFFI.h>
-#include "Picture_stub.h"
+//#include "Picture_stub.h"
 
 
 #include <SDL2/SDL.h>
@@ -26,6 +26,15 @@ typedef struct Color {
 
 Uint8 calcA(int x, int y, int t) { return 0; }
 
+Uint8 calcR(x,y,t) {
+	return x+20;
+}
+Uint8 calcG(x,y,t) {
+	return y+40;
+}
+Uint8 calcB(x,y,t) {
+	return y+1;
+}
 // Takes x and y positions, and time.
 Color funcFromPointToColor(int x, int y, int t) {
   return (Color) { .r = calcR(x+t,y+t), .g = calcG(x+t,y+t), .b = calcB(x+t,y+t)
