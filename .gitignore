@@ -248,3 +248,4 @@ ModelManifest.xml
 *.hi
 .DS_Store
 OpenGLTesting_C/macOS/main
+.vscode/
