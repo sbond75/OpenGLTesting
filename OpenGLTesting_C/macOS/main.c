@@ -45,18 +45,21 @@ Color funcFromPointToColor(int x, int y, int t) {
    };
 }
 
-void drawPixel(size_t x, size_t y, Uint8* pixels, Color c) {
-	size_t offset = y * SCREEN_WIDTH + x*3;
+void drawPixel(size_t i, Uint8* pixels, SDL_PixelFormat* format, Color c) {
+	pixels[i * sizeof(Color)] = SDL_MapRGB(format, c.r, c.g, c.b);
+
+	/*
 	pixels[offset]     = c.r; // r, _, _, r, _, _, ...
 	pixels[offset + 1] = c.g;
 	pixels[offset + 2] = c.b;
 #ifdef USE_ALPHA
 	pixels[offset + 3] = c.a;
 #endif
+	*/
 }
 
 // t is time.
-int render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
+int render(SDL_Renderer* renderer, SDL_Texture* screen, SDL_PixelFormat* format, int t) {
 	Uint32 start = SDL_GetTicks();
 	// This line is only needed if we want to render over time,
 	// pixel by pixel and present between pixels.
@@ -74,18 +77,17 @@ int render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
 	}
 
 	// Fill the `pixels` array:
-	for (size_t j = 0; j < SCREEN_HEIGHT; ++j) {
-		for (size_t i = 0; i < SCREEN_WIDTH; ++i) {
-			Color c = funcFromPointToColor(i, j, t);
-			drawPixel(i, j, pixels, c);
-		}
-		/*
-		SDL_SetRenderTarget(renderer, NULL);
-		SDL_RenderCopy(renderer, screen, NULL, NULL);
-		SDL_RenderPresent(renderer);
-		SDL_SetRenderTarget(renderer, screen);
-		*/
+	for (size_t i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; ++i) {
+		size_t j = (i / SCREEN_WIDTH) % SCREEN_HEIGHT;
+		Color c = funcFromPointToColor(i, j, t);
+		drawPixel(i, pixels, format, c);
 	}
+	/*
+	SDL_SetRenderTarget(renderer, NULL);
+	SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_RenderPresent(renderer);
+	SDL_SetRenderTarget(renderer, screen);
+	*/
 
 	// Clean up with SDL_UnlockTexture:
 	SDL_UnlockTexture(screen);
@@ -139,7 +141,7 @@ int main(int argc, char** argv)
 	}
 
 	// Create renderer
-	renderer = SDL_CreateRenderer(window, -1, /*SDL_RENDERER_SOFTWARE*/ SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE /*SDL_RENDERER_ACCELERATED*/);
 	if (renderer == NULL) {
 		fprintf(stderr, "Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
 		return 1;
@@ -152,6 +154,15 @@ int main(int argc, char** argv)
 	Uint32 form = SDL_PIXELFORMAT_RGB24;
 #endif
 	SDL_Texture* screen = SDL_CreateTexture(renderer, form, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+	if (screen == NULL) {
+		fprintf(stderr, "SDL_CreateTexture() failed! SDL_Error: %s\n", SDL_GetError());
+		return 1;
+	}
+	SDL_PixelFormat* format = SDL_AllocFormat(form);
+	if (format == NULL) {
+		fprintf(stderr, "SDL_AllocFormat() failed! SDL_Error: %s\n", SDL_GetError());
+		return 1;
+	}
 
 #ifndef USE_ALPHA
 	// Disable alpha blending for performance.
@@ -159,7 +170,7 @@ int main(int argc, char** argv)
 #endif
 
 	int t = 0;
-	render(renderer, screen, t);
+	render(renderer, screen, format, t);
 
 	// While application is running
 	while (!quit) {
@@ -195,7 +206,7 @@ int main(int argc, char** argv)
 
 		// Render
 		t++;
-		render(renderer, screen, t);
+		render(renderer, screen, format, t);
 	}
 
 	/* Destroy our renderer, destroy our window, and shutdown SDL */
