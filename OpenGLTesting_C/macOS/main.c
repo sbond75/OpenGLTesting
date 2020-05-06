@@ -46,7 +46,15 @@ void drawPixel(int x, int y, SDL_Renderer* renderer, Color c) {
 
 int main(int argc, char** argv)
 {
-        hs_init(&argc, &argv);
+	// the host application should initalize a plugin with a context, a plugin
+    cr_plugin ctx;
+
+	// the full path to the live-reloadable application
+    cr_plugin_open(ctx, "c:/path/to/build/game.dll");
+
+	// Initialize the Haskell runtime system.
+    hs_init(&argc, &argv);
+	
 	// The window we'll be rendering to
 	SDL_Window* window = NULL;
 
