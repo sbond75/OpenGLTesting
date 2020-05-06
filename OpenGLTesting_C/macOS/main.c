@@ -26,6 +26,7 @@ typedef struct Color {
 
 Uint8 calcA(int x, int y, int t) { return 0; }
 
+
 Uint8 calcR(x,y,t) {
 	return x+20;
 }
@@ -35,9 +36,10 @@ Uint8 calcG(x,y,t) {
 Uint8 calcB(x,y,t) {
 	return y+1;
 }
+
 // Takes x and y positions, and time.
 Color funcFromPointToColor(int x, int y, int t) {
-  return (Color) { .r = calcR(x+t,y+t), .g = calcG(x+t,y+t), .b = calcB(x+t,y+t)
+  return (Color) { .r = calcR(x+t,y+t,t), .g = calcG(x+t,y+t,t), .b = calcB(x+t,y+t,t)
 #ifdef USE_ALPHA
 	, .a = calcA(x+t,y+t,t)
 #endif
@@ -56,6 +58,7 @@ void drawPixel(int x, int y, SDL_Renderer* renderer, Color c) {
 
 // t is time.
 void render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
+	Uint32 start = SDL_GetTicks();
 	// This line is only needed if we want to render over time,
 	// pixel by pixel and present between pixels.
 	//SDL_RenderClear(renderer);
@@ -81,6 +84,10 @@ void render(SDL_Renderer* renderer, SDL_Texture* screen, int t) {
 
 	// Present our pixels
 	SDL_RenderPresent(renderer);
+
+	Uint32 end = SDL_GetTicks();
+	Uint32 elapsed = end - start;
+	printf("Elapsed milliseconds: %d\n", elapsed);
 }
 
 int main(int argc, char** argv)

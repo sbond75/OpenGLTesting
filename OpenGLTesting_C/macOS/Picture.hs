@@ -162,9 +162,9 @@ disks = renderRegion $ f <$> udisk
                          <*> vstrip
   where f a b c d = a || b || c || d
 
-mainImage = fig8
+mainImage = \(x,y) -> (Color (x+20) (y+40) (y+1) 255)
 
-calculate extract = floor . (* 255) . extract . adjust mainImage . toFloat
+calculate extract = floor . extract . mainImage . toFloat
   where
     (screenWidth, screenHeight) = (640, 480)
     toFloat :: (CInt, CInt) -> (Float, Float)
