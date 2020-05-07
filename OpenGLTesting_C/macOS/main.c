@@ -39,22 +39,31 @@ Uint8 calcB_(x, y, t) { return y + 1; }
 #define calcB calcB_
 #endif
 // Takes x and y positions, and time.
-/* static inline Color calc(int x, int y, int t) { */
-/*   return (Color){.r = calcR(x, y, t), */
-/*                  .g = calcG(x, y, t), */
-/*                  .b = calcB(x, y, t) */
-/* #ifdef USE_ALPHA */
-/*                      , */
-/*                  .a = calcA(x, y, t) */
-/* #endif */
-/*   }; */
-/* } */
+static inline Color calc(int x, int y, int t) {
+  return (Color){.r = calcR(x, y, t),
+                 .g = calcG(x, y, t),
+                 .b = calcB(x, y, t)
+#ifdef USE_ALPHA
+                     ,
+                 .a = calcA(x, y, t)
+#endif
+  };
+}
 
-/* static inline void drawPixel(size_t i, Uint8 *pixels, Color c) { */
-/*   pixels[i * 3] = c.r; */
-/*   pixels[i * 3 + 1] = c.g; */
-/*   pixels[i * 3 + 2] = c.b; */
-/* } */
+static inline void drawPixel(size_t i, Uint8 *pixels, Color c) {
+  pixels[i * 3] = c.r;
+  pixels[i * 3 + 1] = c.g;
+  pixels[i * 3 + 2] = c.b;
+
+  /*
+  pixels[offset]     = c.r; // r, _, _, r, _, _, ...
+  pixels[offset + 1] = c.g;
+  pixels[offset + 2] = c.b;
+#ifdef USE_ALPHA
+  pixels[offset + 3] = c.a;
+#endif
+  */
+}
 
 // t is time.
 int render(SDL_Renderer *renderer, SDL_Texture *screen, int t) {
@@ -77,6 +86,12 @@ int render(SDL_Renderer *renderer, SDL_Texture *screen, int t) {
   }
 
   // Fill the `pixels` array:
+  /* for (size_t i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; ++i) { */
+  /*   size_t x = i % SCREEN_WIDTH; */
+  /*   size_t y = i / SCREEN_WIDTH; */
+  /*   Color c = calc(x, y, t); */
+  /*   drawPixel(i, pixels, c); */
+  /* } */
   fillPixelBuffer(pixels, t);
   
   /*
@@ -221,9 +236,6 @@ int main(int argc, char **argv) {
 
     // Increment the time using the elapsed milliseconds of this frame.
     t += fpsLimiter._frameTime;
-
-    // printf("FPS: %.1f\n", fps);
-    // printf("Total: %d\n", t);
   }
 
   /* Destroy our renderer, destroy our window, and shutdown SDL */

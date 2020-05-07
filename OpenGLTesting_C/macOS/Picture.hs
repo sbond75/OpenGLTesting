@@ -4,15 +4,15 @@
 
 -- :set -fobject-code in GHCi
 module Picture where
-import           Foreign             hiding (rotate)
+import           Foreign               hiding (rotate)
 import           Foreign.C.Types
 import           Foreign.Storable
 
 import           Control.Applicative
 import           Control.Monad
-import           Data.Bits           hiding (rotate)
+import           Data.Bits             hiding (rotate)
 import           Data.Function
-import Foreign.Marshal.Array
+import           Foreign.Marshal.Array
 
 data Color = Color {r,g,b,a :: {-# UNPACK #-} !Float} deriving Show
 data CColor = CColor { rC, gC, bC :: {-# UNPACK #-} !CUChar}
@@ -183,14 +183,12 @@ calculate (x,y,t) = adjust (mainAnim t') (x',y')
 
 foreign export ccall fillPixelBuffer :: Ptr CUChar -> CInt -> IO ()
 
-fillPixelBuffer arr t = pokeArray arr ([0..screenWidth*screenHeight-1] >>= calc)
+fillPixelBuffer arr t = pokeArray arr (l1 >>= calc)
   where
-    f i = let (y,x) = i `quotRem` screenWidth in (x,y)
-    calc i = floor . (* 255) <$> [r,g,b]
+    l1 = [(x,y) | y <- [0..screenHeight-1], x <- [0..screenWidth-1]]
+    calc (x,y) = floor . (* 255) <$> [r,g,b]
       where
         Color r g b _ = calculate (x,y,t)
-        (x,y) = f i
-
 
 checker :: Region
 checker (x,y) = even (floor x + floor y)

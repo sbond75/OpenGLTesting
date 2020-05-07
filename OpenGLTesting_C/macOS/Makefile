@@ -14,9 +14,9 @@ all: main.c Picture.o; gcc \
   -lSDL2 -lgmp -lffi \
   -Wall \
   -o main main.c Picture.o Timing.c \
-  -O3 
+  -O2
 
-Picture.o: Picture.hs; ghc -fforce-recomp Picture.hs
+Picture.o: Picture.hs; ghc -O2 -fforce-recomp Picture.hs
 
 .PHONY: clean
 clean: ; rm -rf main && rm -rf *.o && rm -rf *.hi && rm -rf *_stub.h
