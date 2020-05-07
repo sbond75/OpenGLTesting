@@ -38,6 +38,23 @@ Uint8 calcB_(x, y, t) { return y + 1; }
 #define calcG calcG_
 #define calcB calcB_
 #endif
+// Takes x and y positions, and time.
+/* static inline Color calc(int x, int y, int t) { */
+/*   return (Color){.r = calcR(x, y, t), */
+/*                  .g = calcG(x, y, t), */
+/*                  .b = calcB(x, y, t) */
+/* #ifdef USE_ALPHA */
+/*                      , */
+/*                  .a = calcA(x, y, t) */
+/* #endif */
+/*   }; */
+/* } */
+
+/* static inline void drawPixel(size_t i, Uint8 *pixels, Color c) { */
+/*   pixels[i * 3] = c.r; */
+/*   pixels[i * 3 + 1] = c.g; */
+/*   pixels[i * 3 + 2] = c.b; */
+/* } */
 
 // t is time.
 int render(SDL_Renderer *renderer, SDL_Texture *screen, int t) {

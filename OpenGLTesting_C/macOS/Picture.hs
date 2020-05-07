@@ -167,10 +167,7 @@ mainImage = fig8
 
 mainAnim t = renderRegion (swirlingXPos t)
 
-calculate extract (x,y,t) = adjust (mainAnim t') (x',y')
-                          & extract
-                          & (* 255)
-                          & floor
+calculate (x,y,t) = adjust (mainAnim t') (x',y')
   where
     -- Modulo 10 s = 10000 ms, then scale to [0,2]
     scaledTime = (fromIntegral (t `mod` 10000)) / 5000
@@ -184,31 +181,16 @@ calculate extract (x,y,t) = adjust (mainAnim t') (x',y')
 
 (screenWidth, screenHeight) = (640, 480)
 
-foreign export ccall calcR :: CInt -> CInt -> CInt -> CUChar
-foreign export ccall calcG :: CInt -> CInt -> CInt -> CUChar
-foreign export ccall calcB :: CInt -> CInt -> CInt -> CUChar
 foreign export ccall fillPixelBuffer :: Ptr CUChar -> CInt -> IO ()
 
 fillPixelBuffer arr t = pokeArray arr ([0..screenWidth*screenHeight-1] >>= calc)
   where
     f i = let (y,x) = i `quotRem` screenWidth in (x,y)
-    calc i = [calcR x y t, calcG x y t, calcB x y t]
-      where (x,y) = f i
+    calc i = floor . (* 255) <$> [r,g,b]
+      where
+        Color r g b _ = calculate (x,y,t)
+        (x,y) = f i
 
-calcR :: CInt -> CInt -> CInt -> CUChar
-calcR x y t = calculate f (x,y,t)
-  where
-    f (Color x _ _ _) = x
-
-calcG :: CInt -> CInt -> CInt -> CUChar
-calcG x y t = calculate f (x,y,t)
-  where
-    f (Color _ y _ _) = y
-
-calcB :: CInt -> CInt -> CInt -> CUChar
-calcB x y t = calculate f (x,y,t)
-  where
-    f (Color _ _ z _) = z
 
 checker :: Region
 checker (x,y) = even (floor x + floor y)
