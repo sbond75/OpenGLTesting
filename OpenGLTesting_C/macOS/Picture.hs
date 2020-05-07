@@ -212,14 +212,14 @@ fillPixelBuffer arr t = pokeArray arr (map calc l1)
     -- l1 :: [(Int, Int)]
     l1 = [(x,y) | y <- [0..screenHeight-1], x <- [0..screenWidth-1]]
     -- calc :: (Int, Int) -> CColor
-    calc (x,y) = CColor (round (255 * r))
-                        (round (255 * g))
-                        (round (255 * b))
+    calc (x,y) = CColor (truncate (255 * r))
+                        (truncate (255 * g))
+                        (truncate (255 * b))
       where
         Color r g b _ = calculate (x,y,t)
 
 checker :: Region
-checker (x,y) = even (round x + round y)
+checker (x,y) = even (truncate x + truncate y)
 
 vstrip :: Region
 vstrip (x,y) = abs x <= 1/2
@@ -229,9 +229,9 @@ overlay = liftA2 (<>)
 
 -- Sierpinski triangle
 gasket :: Region
-gasket (x,y) = round x .|. round y == (round x :: Integer)
+gasket (x,y) = truncate x .|. truncate y == (truncate x :: Integer)
 
-altRings p = even (round (distO p))
+altRings p = even (truncate (distO p))
 
 distO (x,y) = sqrt (x * x + y * y)
 
@@ -310,7 +310,7 @@ annulus inner = udisk \\ uscale inner udisk
 radReg :: Int -> Region
 radReg n = test . toPolar
   where
-    test (r, a) = even (round (a * fromIntegral n / pi))
+    test (r, a) = even (truncate (a * fromIntegral n / pi))
 
 wedgeAnnulus :: Frac -> Int -> Region
 wedgeAnnulus inner n = annulus inner `intersect` radReg n
