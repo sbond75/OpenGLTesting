@@ -1,5 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface  #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ForeignFunctionInterface, NoMonomorphismRestriction  #-}
 
 -- :set -fobject-code in GHCi
 module Picture where
@@ -13,8 +12,11 @@ import           Data.Bits             hiding (rotate)
 import           Data.Function
 import           Foreign.Marshal.Array
 
-data Color = Color {r,g,b,a :: {-# UNPACK #-} !Float} deriving Show
-data CColor = CColor { rC, gC, bC :: {-# UNPACK #-} !CUChar}
+default (Int,Float,Integer)
+
+-- Strict
+data Color = Color { r,g,b,a :: !Float} deriving Show
+data CColor = CColor { rC, gC, bC :: !CUChar} deriving Show
 
 -- When we figure out how to interop C structs
 -- foreign import ccall  "color.h"
@@ -32,7 +34,6 @@ instance Storable CColor where
            pokeByteOff ptr 1 c
            pokeByteOff ptr 2 i
 
--- newtype Colour = Colour { unColou :: (Float, Float, Float
 type Point = (Float, Float)
 
 type Image a = Point -> a
@@ -119,6 +120,8 @@ translate (dx,dy) = invWarp (translateP (-dx, -dy))
 scale :: Vector -> Filter c
 scale (sx,sy) = invWarp (scaleP (1/sx, 1/sy))
 
+-- Laws
+-- uscale x . uscale y = uscale (x * y)
 uscale :: Float -> Filter c
 uscale s = invWarp (uscaleP (1/s))
 
@@ -187,30 +190,36 @@ calculate (x,y,t) = adjust (mainAnim t') (x',y')
     -- Time range of the animation
     range = pi
     -- Time normalized from 0 to 1
-    normalizedTime = fromIntegral (t `mod` duration) / fromIntegral duration
+    normalizedTime = fromIntegral (t `mod` duration)
+                   / fromIntegral duration
     scaledTime = range * normalizedTime
     (x', y', t') = (fromIntegral x, fromIntegral y, scaledTime)
     adjust = adjustToWindow
     -- Adjust an image to a window, by translating, scaling and flipping
     adjustToWindow :: Filter c
     adjustToWindow = translate (screenWidth / 2, screenHeight / 2)
-                   . scale (60,60)
+                   . uscale 60
+                   . uscale 4
                    . flipY
     flipY p (x,y) = p (x,-y)
 
 (screenWidth, screenHeight) = (640, 480)
 
-foreign export ccall fillPixelBuffer :: Ptr CUChar -> CInt -> IO ()
+foreign export ccall fillPixelBuffer :: Ptr CColor -> CInt -> IO ()
 
-fillPixelBuffer arr t = pokeArray arr (l1 >>= calc)
+fillPixelBuffer arr t = pokeArray arr (map calc l1)
   where
+    -- l1 :: [(Int, Int)]
     l1 = [(x,y) | y <- [0..screenHeight-1], x <- [0..screenWidth-1]]
-    calc (x,y) = floor . (* 255) <$> [r,g,b]
+    -- calc :: (Int, Int) -> CColor
+    calc (x,y) = CColor (round (255 * r))
+                        (round (255 * g))
+                        (round (255 * b))
       where
         Color r g b _ = calculate (x,y,t)
 
 checker :: Region
-checker (x,y) = even (floor x + floor y)
+checker (x,y) = even (round x + round y)
 
 vstrip :: Region
 vstrip (x,y) = abs x <= 1/2
@@ -220,9 +229,9 @@ overlay = liftA2 (<>)
 
 -- Sierpinski triangle
 gasket :: Region
-gasket (x,y) = floor x .|. floor y == (floor x :: Integer)
+gasket (x,y) = round x .|. round y == (round x :: Integer)
 
-altRings p = even (floor (distO p))
+altRings p = even (round (distO p))
 
 distO (x,y) = sqrt (x * x + y * y)
 
@@ -301,7 +310,7 @@ annulus inner = udisk \\ uscale inner udisk
 radReg :: Int -> Region
 radReg n = test . toPolar
   where
-    test (r, a) = even (floor (a * fromIntegral n / pi))
+    test (r, a) = even (round (a * fromIntegral n / pi))
 
 wedgeAnnulus :: Frac -> Int -> Region
 wedgeAnnulus inner n = annulus inner `intersect` radReg n

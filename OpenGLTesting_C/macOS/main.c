@@ -1,20 +1,18 @@
-#define USE_HASKELL_EXPORTS // Configurable setting
+// Configurable setting
+#define USE_HASKELL_EXPORTS
 #ifdef USE_HASKELL_EXPORTS
 #include "Picture_stub.h"
 #include <HsFFI.h>
 #endif
 
 #include <SDL2/SDL.h>
-// #pragma comment(lib, "SDL2.lib")
-// #pragma comment(lib, "SDL2main.lib")
 #include <stdbool.h>
 #include <stdio.h>
-//#include "s_new_from_stdin.h" // Because we don't have std::getline from
-//C++...
 #include "Timing.h"
 #include <stdint.h>
 
-//#define USE_ALPHA // Configurable setting
+// Configurable setting
+// #define USE_ALPHA
 
 // Screen dimension constants
 const int SCREEN_WIDTH = 640;
@@ -47,33 +45,19 @@ int render(SDL_Renderer *renderer, SDL_Texture *screen, int t) {
   // SDL_RenderClear(renderer);
 
   // Lock the texture for rendering so that we can write pixels to it.
-  int pitch = SCREEN_WIDTH *
-              sizeof(Color); // Width (in bytes) of a single row in the texture.
-  Uint8 *pixels = NULL;      // r, g, b, r, g, b, ...
-  if (SDL_LockTexture(
-          screen,
-          NULL, // NULL means the *whole texture* here.
-          (void **)&pixels,
-          &pitch)) { // After SDL_LockTexture, `pixels` can be used for writing.
+  int pitch = SCREEN_WIDTH * sizeof(Color);
+  // Width (in bytes) of a single row in the texture.
+  // r, g, b, r, g, b, ...
+  Uint8 *pixels = NULL;
+  // NULL means the *whole texture* here.
+  if (SDL_LockTexture(screen, NULL, (void **)&pixels, &pitch)) {
+    // After SDL_LockTexture, `pixels` can be used for writing.
     fprintf(stderr, "Error locking texture! SDL_Error: %s\n", SDL_GetError());
     return 1;
   }
 
   // Fill the `pixels` array:
-  /* for (size_t i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; ++i) { */
-  /*   size_t x = i % SCREEN_WIDTH; */
-  /*   size_t y = i / SCREEN_WIDTH; */
-  /*   Color c = calc(x, y, t); */
-  /*   drawPixel(i, pixels, c); */
-  /* } */
   fillPixelBuffer(pixels, t);
-  
-  /*
-  SDL_SetRenderTarget(renderer, NULL);
-  SDL_RenderCopy(renderer, screen, NULL, NULL);
-  SDL_RenderPresent(renderer);
-  SDL_SetRenderTarget(renderer, screen);
-  */
 
   // Clean up with SDL_UnlockTexture:
   SDL_UnlockTexture(screen);
@@ -115,7 +99,9 @@ int main(int argc, char **argv) {
 
   // FpsLimiter
   FpsLimiter fpsLimiter;
-  FpsLimiter_init(&fpsLimiter, 60.0f); // Set the FPS.
+  
+  // Set the FPS.
+  FpsLimiter_init(&fpsLimiter, 60.0f);
 
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -125,7 +111,7 @@ int main(int argc, char **argv) {
   }
 
   // Create window
-  window = SDL_CreateWindow(NULL /*"SDL Tutorial"*/, SDL_WINDOWPOS_UNDEFINED,
+  window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
                             SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
   if (window == NULL) {
@@ -198,11 +184,8 @@ int main(int argc, char **argv) {
     if (quit)
       break;
 
-    // Delay
-    // SDL_Delay(15);
 
     // Render
-    // puts("--");
     render(renderer, screen, t);
 
     // Delay automatically if needed to limit to the configured framerate.
@@ -212,7 +195,7 @@ int main(int argc, char **argv) {
     t += fpsLimiter._frameTime;
   }
 
-  /* Destroy our renderer, destroy our window, and shutdown SDL */
+  // Destroy our renderer, destroy our window, and shutdown SDL
   SDL_DestroyTexture(screen);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
