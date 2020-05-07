@@ -2,7 +2,7 @@
 {-# LANGUAGE ForeignFunctionInterface  #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
--- Set -fobject-code in GHCi
+-- :set -fobject-code in GHCi
 module Picture where
 import           Foreign             hiding (rotate)
 import           Foreign.C.Types
@@ -164,11 +164,17 @@ disks = renderRegion $ f <$> udisk
 
 mainImage = fig8
 
-calculate extract = floor . (* 255) . extract . adjust mainImage . toFloat
+mainAnim t = renderRegion (swirlingXPos t)
+-- -- floor . (* 255) . extract . adjust mainImage . toFloat
+calculate extract (x,y,t) = adjust (mainAnim t') (x',y')
+                          & extract
+                          & (* 255)
+                          & floor
   where
+    -- Modulo 10 s = 10000 ms, then scale to [0,2]
+    scaledTime = (fromIntegral (t `mod` 10000)) / 5000
+    (x', y', t') = (fromIntegral x, fromIntegral y, scaledTime)
     (screenWidth, screenHeight) = (640, 480)
-    toFloat :: (CInt, CInt) -> (Float, Float)
-    toFloat (x,y) = (fromIntegral x, fromIntegral y)
     adjust = adjustToWindow
     adjustToWindow :: Filter c
     adjustToWindow = translate (screenWidth / 2, screenHeight / 2)
@@ -176,22 +182,22 @@ calculate extract = floor . (* 255) . extract . adjust mainImage . toFloat
                    . flipY
     flipY p (x,y) = p (x,-y)
 
-foreign export ccall calcR :: CInt -> CInt -> CUChar
-foreign export ccall calcG :: CInt -> CInt -> CUChar
-foreign export ccall calcB :: CInt -> CInt -> CUChar
+foreign export ccall calcR :: CInt -> CInt -> CInt -> CUChar
+foreign export ccall calcG :: CInt -> CInt -> CInt -> CUChar
+foreign export ccall calcB :: CInt -> CInt -> CInt -> CUChar
 
-calcR :: CInt -> CInt -> CUChar
-calcR x y = calculate f (x,y)
+calcR :: CInt -> CInt -> CInt -> CUChar
+calcR x y t = calculate f (x,y,t)
   where
     f (Color x _ _ _) = x
 
-calcG :: CInt -> CInt -> CUChar
-calcG x y = calculate f (x,y)
+calcG :: CInt -> CInt -> CInt -> CUChar
+calcG x y t = calculate f (x,y,t)
   where
     f (Color _ y _ _) = y
 
-calcB :: CInt -> CInt -> CUChar
-calcB x y = calculate f (x,y)
+calcB :: CInt -> CInt -> CInt -> CUChar
+calcB x y t = calculate f (x,y,t)
   where
     f (Color _ _ z _) = z
 
