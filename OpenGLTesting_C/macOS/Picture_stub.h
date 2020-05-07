@@ -5,6 +5,7 @@ extern "C" {
 extern HsWord8 calcR(HsInt32 a1, HsInt32 a2, HsInt32 a3);
 extern HsWord8 calcG(HsInt32 a1, HsInt32 a2, HsInt32 a3);
 extern HsWord8 calcB(HsInt32 a1, HsInt32 a2, HsInt32 a3);
+extern void fillPixelBuffer(HsPtr a1, HsInt32 a2);
 #ifdef __cplusplus
 }
 #endif

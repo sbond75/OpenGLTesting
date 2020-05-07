@@ -12,6 +12,7 @@ import           Control.Applicative
 import           Control.Monad
 import           Data.Bits           hiding (rotate)
 import           Data.Function
+import Foreign.Marshal.Array
 
 data Color = Color {r,g,b,a :: {-# UNPACK #-} !Float} deriving Show
 data CColor = CColor { rC, gC, bC :: {-# UNPACK #-} !CUChar}
@@ -165,7 +166,7 @@ disks = renderRegion $ f <$> udisk
 mainImage = fig8
 
 mainAnim t = renderRegion (swirlingXPos t)
--- -- floor . (* 255) . extract . adjust mainImage . toFloat
+
 calculate extract (x,y,t) = adjust (mainAnim t') (x',y')
                           & extract
                           & (* 255)
@@ -174,7 +175,6 @@ calculate extract (x,y,t) = adjust (mainAnim t') (x',y')
     -- Modulo 10 s = 10000 ms, then scale to [0,2]
     scaledTime = (fromIntegral (t `mod` 10000)) / 5000
     (x', y', t') = (fromIntegral x, fromIntegral y, scaledTime)
-    (screenWidth, screenHeight) = (640, 480)
     adjust = adjustToWindow
     adjustToWindow :: Filter c
     adjustToWindow = translate (screenWidth / 2, screenHeight / 2)
@@ -182,9 +182,18 @@ calculate extract (x,y,t) = adjust (mainAnim t') (x',y')
                    . flipY
     flipY p (x,y) = p (x,-y)
 
+(screenWidth, screenHeight) = (640, 480)
+
 foreign export ccall calcR :: CInt -> CInt -> CInt -> CUChar
 foreign export ccall calcG :: CInt -> CInt -> CInt -> CUChar
 foreign export ccall calcB :: CInt -> CInt -> CInt -> CUChar
+foreign export ccall fillPixelBuffer :: Ptr CUChar -> CInt -> IO ()
+
+fillPixelBuffer arr t = pokeArray arr ([0..screenWidth*screenHeight] >>= calc)
+  where
+    f i = let (y,x) = i `quotRem` screenWidth in (x,y)
+    calc i = [calcR x y t, calcG x y t, calcB x y t]
+      where (x,y) = f i
 
 calcR :: CInt -> CInt -> CInt -> CUChar
 calcR x y t = calculate f (x,y,t)
