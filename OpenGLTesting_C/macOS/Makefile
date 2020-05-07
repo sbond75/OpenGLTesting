@@ -16,7 +16,7 @@ all: main.c Picture.o; gcc \
   -o main main.c Picture.o Timing.c \
   -O2
 
-Picture.o: Picture.hs; ghc -O2 -fforce-recomp Picture.hs
+Picture.o: Picture.hs; ghc -O2 -fasm -fforce-recomp Picture.hs
 
 .PHONY: clean
 clean: ; rm -rf main && rm -rf *.o && rm -rf *.hi && rm -rf *_stub.h

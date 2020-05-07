@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fasm #-}
 {-# LANGUAGE ForeignFunctionInterface  #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -134,7 +133,14 @@ swirl r = invWarp (swirlP (-r))
 
 square n (x,y) = abs x <= n/2 && abs y <= n/2
 
--- Figures from Conal Elliot's Functional Images paper.
+-- Figure to visually check orientation
+disks = renderRegion $ f <$> udisk
+                         <*> translate (2,2) udisk
+                         <*> translate (3,2) udisk
+                         <*> vstrip
+  where f a b c d = a || b || c || d
+
+-- Figures from "Functional Images" by Conal Elliot.
 fig1 = renderRegion $ vstrip
 fig2 = renderRegion $ checker
 fig3 = renderRegion $ altRings
@@ -148,6 +154,7 @@ fig8 = lerpI wavDist (blackWhiteIm (polarChecker 10))
 fig9 = ybRings
 fig10 = renderRegion  udisk
 fig11 = renderRegion $ swirl 1 vstrip
+fig13 t = renderRegion (swirlingXPos t)
 fig14 = renderRegion $ annulus 0.5
 fig17 = renderRegion $ shiftXor 2.6 altRings
 fig18 = renderRegion $ xorgon 8 (7/4) altRings
@@ -156,23 +163,35 @@ fig19 = crop (wedgeAnnulus 0.25 10) ybRings
 fig20 = crop (swirl 2 (wedgeAnnulus 0.25 10)) ybRings
 fig22 = translate (-20, -20) tiledBilerp
 fig23 = renderRegion $ uscale 3.5 (radInvert checker)
+fig24 = rippleRad 8 0.3 ybRings
+fig25 = \t -> rippleRad 8 (cos t/2) ybRings
+fig26 = rippleRad 8 0.3 $ cropRad 1 $ ybRings
+fig27 = cropRad 1 $ rippleRad 8 0.3 $ ybRings
+fig28 = swirl 8   $ rippleRad 5 0.3 $
+        cropRad 5 $ ybRings
+-- Typo in original paper, washer (1/2) (pi/2) 1 tiledBilerp
+-- TODO: Fix visual mismatch with paper.
+fig32 = washer (1/2) (pi/2) tiledBilerp
 
-disks = renderRegion $ f <$> udisk
-                         <*> translate (2,2) udisk
-                         <*> translate (3,2) udisk
-                         <*> vstrip
-  where f a b c d = a || b || c || d
+-- Convert an image to a static animation.
+static :: Image c -> Anim c
+static = const
 
-mainImage = fig8
-
-mainAnim t = renderRegion (swirlingXPos t)
+-- The main animation to run.
+mainAnim = fig32
 
 calculate (x,y,t) = adjust (mainAnim t') (x',y')
   where
-    -- Modulo 10 s = 10000 ms, then scale to [0,2]
-    scaledTime = (fromIntegral (t `mod` 10000)) / 5000
+    -- Duration of the animation in ms
+    duration = 5000
+    -- Time range of the animation
+    range = pi
+    -- Time normalized from 0 to 1
+    normalizedTime = fromIntegral (t `mod` duration) / fromIntegral duration
+    scaledTime = range * normalizedTime
     (x', y', t') = (fromIntegral x, fromIntegral y, scaledTime)
     adjust = adjustToWindow
+    -- Adjust an image to a window, by translating, scaling and flipping
     adjustToWindow :: Filter c
     adjustToWindow = translate (screenWidth / 2, screenHeight / 2)
                    . scale (60,60)
@@ -199,6 +218,7 @@ vstrip (x,y) = abs x <= 1/2
 overlay :: ImageC -> ImageC -> ImageC
 overlay = liftA2 (<>)
 
+-- Sierpinski triangle
 gasket :: Region
 gasket (x,y) = floor x .|. floor y == (floor x :: Integer)
 
@@ -332,3 +352,26 @@ radInvertP = polarWarp (\(ρ,θ) -> (1/ρ, θ))
 
 radInvert :: Filter c
 radInvert = invWarp radInvertP
+
+rippleRadP :: Int -> Float -> Warp
+rippleRadP n s = polarWarp $
+  (\(ρ,θ) -> (ρ * (1 + s * sin (fromIntegral n * θ)), θ))
+
+rippleRad :: Int -> Float -> Filter c
+rippleRad n s = invWarp (rippleRadP n (-s))
+
+cropRad :: Float -> FilterC
+cropRad r = crop (uscale r udisk)
+
+wiggleRotateP :: Float -> Float -> Time -> Warp
+wiggleRotateP cycles θmax t = polarWarp warp
+  where
+    warp (r,a) = (r, a + θmax * sin (t + dt))
+      where
+        dt = 2 * pi * cycles * (r - 1/2)
+
+wiggleRotate :: Float -> Float -> Time -> Filter c
+wiggleRotate cycles θmax t = invWarp (wiggleRotateP cycles θmax t)
+
+washer :: Float -> Float -> ImageC -> Time -> ImageC
+washer cycles θmax im t = cropRad 1 $ wiggleRotate cycles θmax t $ im
