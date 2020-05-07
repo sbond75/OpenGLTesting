@@ -189,7 +189,7 @@ foreign export ccall calcG :: CInt -> CInt -> CInt -> CUChar
 foreign export ccall calcB :: CInt -> CInt -> CInt -> CUChar
 foreign export ccall fillPixelBuffer :: Ptr CUChar -> CInt -> IO ()
 
-fillPixelBuffer arr t = pokeArray arr ([0..screenWidth*screenHeight] >>= calc)
+fillPixelBuffer arr t = pokeArray arr ([0..screenWidth*screenHeight-1] >>= calc)
   where
     f i = let (y,x) = i `quotRem` screenWidth in (x,y)
     calc i = [calcR x y t, calcG x y t, calcB x y t]
