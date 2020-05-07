@@ -49,8 +49,8 @@ void FpsLimiter_calculateFPS(FpsLimiter* this) {
     Uint32 currentTicks = SDL_GetTicks();
 
     //Calculate the number of ticks (ms) for this frame
-    this->_frameTime = (float)(currentTicks - prevTicks);
-    frameTimes[currentFrame % NUM_SAMPLES] = this->_frameTime;
+    this->_frameTime = (currentTicks - prevTicks);
+    frameTimes[currentFrame % NUM_SAMPLES] = (float)this->_frameTime;
 
     //current ticks is now previous ticks
     prevTicks = currentTicks;

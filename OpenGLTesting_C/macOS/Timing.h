@@ -4,7 +4,7 @@ typedef struct FpsLimiter {
     // Variables
     float _fps;
     float _maxFPS;
-    float _frameTime;
+    Uint32 _frameTime;
     Uint32 _startTicks;
 } FpsLimiter;
 

@@ -222,13 +222,15 @@ int main(int argc, char** argv)
 		// Render
 		puts("--");
 		render(renderer, screen, t);
-		t++;
 
 		// Delay automatically if needed to limit to the configured framerate.
 		float fps = FpsLimiter_end(&fpsLimiter);
 
+		// Increment the time using the elapsed milliseconds of this frame.
+		t += fpsLimiter._frameTime;
+
 		printf("FPS: %.1f\n", fps);
-		printf("FrameTime: %.1f\n", fpsLimiter._frameTime);
+		printf("FrameTime: %d\n", fpsLimiter._frameTime);
 	}
 
 	/* Destroy our renderer, destroy our window, and shutdown SDL */
