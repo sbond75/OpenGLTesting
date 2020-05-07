@@ -76,6 +76,6 @@ void FpsLimiter_calculateFPS(FpsLimiter* this) {
     if (frameTimeAverage > 0) {
         this->_fps = 1000.0f / frameTimeAverage;
     } else {
-        this->_fps = 60.0f;
+        this->_fps = this->_maxFPS;
     }
 }

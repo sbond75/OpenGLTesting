@@ -1,0 +1,31 @@
+[
+ {
+  "directory": "/Volumes/New Mac OS/Users/sebastianbond/Documents/Projects/OpenGLTesting/OpenGLTesting_C/macOS",
+  "arguments": [
+   "gcc",
+   "-O3",
+   "-liconv",
+   "-lHSrts",
+   "-L/Users/sebastianbond/.ghcup/ghc/8.6.5/lib/ghc-8.6.5//rts",
+   "-I/Users/sebastianbond/.ghcup/ghc/8.6.5/lib/ghc-8.6.5//include",
+   "-fno-stack-protector",
+   "-L/Users/sebastianbond/.ghcup/ghc/8.6.5/lib/ghc-8.6.5//base-4.12.0.0",
+   "-L/Users/sebastianbond/.ghcup/ghc/8.6.5/lib/ghc-8.6.5//ghc-prim-0.5.3",
+   "-L/Users/sebastianbond/.ghcup/ghc/8.6.5/lib/ghc-8.6.5//integer-gmp-1.0.2.0",
+   "-lHSghc-prim-0.5.3",
+   "-lHSinteger-gmp-1.0.2.0",
+   "-lHSbase-4.12.0.0",
+   "-lSDL2",
+   "-lgmp",
+   "-lffi",
+   "-Wall",
+   "-o",
+   "main",
+   "main.c",
+   "Timing.c",
+   "-g",
+   "Picture.o"
+  ],
+  "file": "Timing.c"
+ }
+]
