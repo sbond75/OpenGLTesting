@@ -1,0 +1,23 @@
+//
+//  Config.xcconfig
+//  OpenGLTesting
+//
+//  Created by sbond75 on 5/7/20.
+//  Copyright © 2020 sbond75. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+ghcRoot=$(HOME)/.ghcup/ghc/8.6.5/lib/ghc-8.6.5/
+//ghcRoot=/usr/local/Cellar/ghc/8.8.3/lib/ghc-8.8.3/
+
+GHC865_LINKER=-L"$(ghcRoot)/base-4.12.0.0" -L"$(ghcRoot)/ghc-prim-0.5.3" -L"$(ghcRoot)/integer-gmp-1.0.2.0" -lHSghc-prim-0.5.3 -lHSinteger-gmp-1.0.2.0 -lHSbase-4.12.0.0
+GHC883_LINKER=-L"$(ghcRoot)/base-4.13.0.0" -L"$(ghcRoot)/ghc-prim-0.5.3" -L"$(ghcRoot)/integer-gmp-1.0.2.0" -lHSghc-prim-0.5.3 -lHSinteger-gmp-1.0.2.0 -lHSbase-4.13.0.0
+
+GHCFLAGS_LINKER=$(GHC865_LINKER)
+//GHCFLAGS_LINKER=$(GHC883_LINKER)
+
+OTHER_LDFLAGS=$(inherited) $(GHCFLAGS_LINKER) -liconv -lHSrts ../Picture.o -L"$(ghcRoot)/rts" -lSDL2 -lgmp -lffi -L/usr/local/lib
+
+OTHER_CFLAGS=$(inherited) -I"$(ghcRoot)/include" -fno-stack-protector -Wall

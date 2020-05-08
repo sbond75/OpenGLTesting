@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #import <Cocoa/Cocoa.h>
+#include "VoodooDraw.h"
 
 // Returns true if success, false if not.
 // Fills the given struct.
@@ -53,20 +54,58 @@ bool getWMInfo(SDL_Window* window, SDL_SysWMinfo* wmInfo) {
     SDL_Window *_sdlWindow;
 } */
 
-void createBuffer(size_t width, size_t height) {
+/* void createBuffer(size_t width, size_t height) {
 #define BYTES_PER_PIXEL 3
     vImageBuffer buf;
     buf.data = malloc(BYTES_PER_PIXEL * width * height);
     buf.height = height;
     buf.width = width;
     buf.rowBytes = 
+} */
+
+CoreSurfaceBufferRef createBuffer(int width, int height) {
+    CFMutableDictionaryRef dict;
+    int x = width, y = height, pitch = x * 2, size = 2 * x * y, i;
+    char *pixelFormat = "565L"; // Each pixel is 16 bits for optimization. 5 bits for red, 6 for green, 5 for blue.
+
+    /* Create a screen surface */
+    dict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
+        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFDictionarySetValue(dict, kCoreSurfaceBufferGlobal, kCFBooleanTrue);
+    CFDictionarySetValue(dict, kCoreSurfaceBufferPitch,
+        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &pitch));
+    CFDictionarySetValue(dict, kCoreSurfaceBufferWidth,
+        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &x));
+    CFDictionarySetValue(dict, kCoreSurfaceBufferHeight,
+        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &y));
+    CFDictionarySetValue(dict, kCoreSurfaceBufferPixelFormat,
+        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type,
+        pixelFormat));
+    CFDictionarySetValue(dict, kCoreSurfaceBufferAllocSize,
+        CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &size));
+
+    CoreSurfaceBufferRef screenSurface = CoreSurfaceBufferCreate(dict);
+    return screenSurface;
 }
 
-@interface CustomView : NSView {
+@interface CustomView : NSObject {
     // Instance variables
     CADisplayLink* displayLink;
 }
 @implementation CustomView
+@implementation MainView
+// "To convert RGB values to 16-bit values suitable for writing to such a buffer, you can define a macro, allowing your application to move smoothly between 16-bit and 32-bit RGB:"
+// Converts the given bytes (R, G, B) into a single 16-bit value.
+#define RGB2565L(R, G, B) ((R >> 3) << 11) | (( G >> 2) << 5 ) \
+    | (( B >> 3 ) << 0 )
+
+- (id)initWithFrame:(CGRect)rect {
+
+    self = [ super initWithFrame: rect ];
+    if (nil != self) {
+
+    return self;
+}
 -(void)createBuffer:  {
 }
 -(void)setupDisplayLink {
@@ -74,6 +113,10 @@ void createBuffer(size_t width, size_t height) {
     [link addToRunLoop: [NSRunLoop mainRunLoop], NSDefaultRunLoopMode];
 }
 -(void)drawStuff {
+    CoreSurfaceBufferRef screenSurface;
+    Uint16* baseAddress = CoreSurfaceBufferGetBaseAddress(screenSurface);
+
+
     self.layer.setNeedsDisplay();
 }
 
@@ -82,17 +125,34 @@ void createBuffer(size_t width, size_t height) {
 }
 @end
 
-bool test(SDL_Window* window) {
+// Returns initialized state if success, else NULL.
+VoodooDrawState test(SDL_Window* window) {
+    VoodooDrawState s;
+
     SDL_SysWMinfo info;
     if (!getSDLInfo(window, info)) {
-        return false;
+        return NULL;
     }
-
-    NSWindow* window = info.cocoa.window;
-    NSView* view = /*(SDLView*)*/window.contentView; // https://developer.apple.com/documentation/appkit/nswindow/1419160-contentview?language=objc
     
+    @autoreleasepool {
+        NSWindow* window = info.cocoa.window;
+        NSView* view = /*(SDLView*)*/window.contentView; // https://developer.apple.com/documentation/appkit/nswindow/1419160-contentview?language=objc
+        
+        CoreSurfaceBufferRef screenSurface = createBuffer(view.rect.size.width, view.rect.size.height);
+        CoreSurfaceBufferLock(screenSurface, 3);
 
-    //CGContextRef myContext = [[NSGraphicsContext currentContext] graphicsPort];
+        [view.layer setContents: screenSurface];
 
-    //CGBitmapContextCreate()
+        CoreSurfaceBufferUnlock(screenSurface);
+
+        objc_property_attribute_t type = { "T", "@\"CADisplayLink\"" };
+        objc_property_attribute_t ownership = { "C", "" }; // C = copy
+        objc_property_attribute_t backingivar  = { "V", "_privateName" };
+        objc_property_attribute_t attrs[] = { type, ownership, backingivar };
+        class_addProperty(SDLView.class, "")
+        //CGContextRef myContext = [[NSGraphicsContext currentContext] graphicsPort];
+
+        //CGBitmapContextCreate()
+
+    }
 }
