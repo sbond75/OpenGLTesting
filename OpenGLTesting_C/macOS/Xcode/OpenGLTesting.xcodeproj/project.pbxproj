@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		30776FAB2464F22D00F6057E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 30776FA32464F22D00F6057E /* main.c */; };
 		30776FAD2464F22D00F6057E /* Timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 30776FAA2464F22D00F6057E /* Timing.c */; };
+		30776FB02465BA2F00F6057E /* MacOS.m in Sources */ = {isa = PBXBuildFile; fileRef = 30776FA82464F22D00F6057E /* MacOS.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -184,6 +185,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30776FB02465BA2F00F6057E /* MacOS.m in Sources */,
 				30776FAB2464F22D00F6057E /* main.c in Sources */,
 				30776FAD2464F22D00F6057E /* Timing.c in Sources */,
 			);

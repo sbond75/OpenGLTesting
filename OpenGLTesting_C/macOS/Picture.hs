@@ -231,7 +231,7 @@ static :: Image c -> Anim c
 static = const
 
 -- The main animation to run.
-mainAnim = static fig8
+mainAnim = fig32
 
 calculate (x, y, t) = adjust (mainAnim t') (x', y')
    
