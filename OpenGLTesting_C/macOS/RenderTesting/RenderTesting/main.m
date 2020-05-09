@@ -14,6 +14,7 @@
 // Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
+#define sizeof_Color 4
 
 static bool Running = true;
 
@@ -90,6 +91,7 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
 @interface CustomView: NSView {
 @public
     CGImageRef imageRef;
+    UInt8* pixelDataTest;
 }
 @end
 
@@ -98,18 +100,23 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
     return YES; // Performance boost
 }
 - (void)drawRect:(NSRect)dirtyRect {
+    size_t size = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof_Color;
+    for(size_t ui = 0; ui < size; ui++) {
+        pixelDataTest[ui] = 1; // This also works!... So does this mean we are using software rendering? Wow...
+    }
+    
     // https://stackoverflow.com/questions/3424103/drawing-image-with-cgimage
     CGContextRef ctx = [NSGraphicsContext currentContext].CGContext;
     CGContextDrawImage(ctx, dirtyRect, imageRef);
 }
 @end
 
+// https://medium.com/@theobendixson/handmade-hero-osx-platform-layer-day-2-b26d6966e214
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         HandmadeMainWindowDelegate *mainWindowDelegate = [[HandmadeMainWindowDelegate alloc] init];
         
         // Prepare pixels //
-#define sizeof_Color 4
         // Greyscale test
         size_t size = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof_Color;
         UInt8* pixelData = malloc(size);
@@ -143,6 +150,7 @@ int main(int argc, const char * argv[]) {
         
         CustomView* view = [[CustomView alloc] init];
         view->imageRef = img;
+        view->pixelDataTest = pixelData;
         [view setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
         [window setContentView: view]; // or [window addSubview]
         [window makeKeyAndOrderFront: nil];
