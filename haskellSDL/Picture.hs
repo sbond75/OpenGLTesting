@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE BangPatterns #-}
 
 -- :set -fobject-code in GHCi
 module Picture where
@@ -17,6 +17,7 @@ import Foreign.Marshal.Array
 
 import Data.Char
 import Data.Complex
+import System.Random
 
 default (Int, Float, Integer)
 
@@ -105,7 +106,7 @@ cond =
 lerpI :: Image Frac -> ImageC -> ImageC -> ImageC
 lerpI = liftA3 lerpC
 
-empty = const mempty
+empty = const invisible
 
 whiteI = const white
 
@@ -251,32 +252,26 @@ calculate (x, y, t) = adjust (mainAnim t') (x', y')
     -- Adjust an image to a window, by translating, scaling and flipping
     adjustToWindow :: Filter c
     adjustToWindow =
-      translate (screenWidth / 2, screenHeight / 2) . uscale 60 . flipY
+      translate (screenWidth / 2, screenHeight / 2) .
+      uscale 60 . flipY
     flipY p (x, y) = p (x, -y)
 
 (screenWidth, screenHeight) = (640, 480)
 
 foreign export ccall fillPixelBuffer :: Ptr CColor -> CInt -> IO ()
+fillPixelBuffer :: Ptr CColor -> CInt -> IO ()
+fillPixelBuffer = fillPixelBufferM
 
-fillPixelBuffer arr t = pokeArray arr (map calc l1)
-  where
-    l1 = [(x, y) | y <- [0 .. screenHeight - 1], x <- [0 .. screenWidth - 1]]
-    calc (x, y) =
-      CColor (truncate (255 * r)) (truncate (255 * g)) (truncate (255 * b))
-      where
-        Color r g b _ = calculate (x, y, t)
-
-fillPixelBufferM ::
-     ((Float, Float) -> Time -> IO Frac) -> Ptr CColor -> Time -> IO ()
-fillPixelBufferM im arr t = do
+fillPixelBufferM arr t = do
   l <- mapM calc l1
   pokeArray arr l
   where
     l1 = [(x, y) | y <- [0 .. screenHeight - 1], x <- [0 .. screenWidth - 1]]
-    calc (x, y) = do
-      Color r g b _ <- lerpC <$> im (x, y) t <*> pure black <*> pure white
-      pure
-        (CColor (truncate (255 * r)) (truncate (255 * g)) (truncate (255 * b)))
+calc (x, y) = do
+  p <- perlin (x+0.5, y+0.5)
+  let c@(Color r g b _) = lerpC p black white
+  return
+    (CColor (truncate (255 * r)) (truncate (255 * g)) (truncate (255 * b)))
 
 checker :: Region
 checker (x, y) = even (floor x + floor y)
@@ -540,35 +535,34 @@ frac c@(x :+ y) z iter
 mandel :: Image Frac
 mandel (x, y) = fromIntegral (frac (x :+ y) (0 :+ 0) 0) / 255
 
-foreign import ccall "render.h" randomFloat :: Float -> IO Float
-
 dotGridGradient :: Int -> Int -> Float -> Float -> IO Float
 dotGridGradient ix iy x y = do
-  (v1, v2) <- gradient iy ix
+  (v1, v2) <- do p' <- randomIO :: IO Float
+                 let (_, p) = properFraction p'
+                 pure (p, sqrt (1 - p ^ 2))
   let c1 = dx * v1
   let c2 = dy * v2
-  pure (c1 + c2)
+  let res = (c1 + c2)
+  -- print res
+  pure res
   where
-    gradient y x = do
-      p <- randomFloat 1.0
-      pure (p, sqrt (1 - p ^ 2))
     dx = x - fromIntegral ix
     dy = y - fromIntegral iy
 
 perlin :: Image (IO Frac)
 perlin (x, y) = do
-  let x0 = truncate x
+  let (x0, sx) = properFraction x
+  let (y0, sy) = properFraction y
   let x1 = x0 + 1
-  let y0 = truncate y
   let y1 = y0 + 1
-  let sx = x - fromIntegral x0
-  let sy = y - fromIntegral y0
   n0 <- dotGridGradient x0 y0 x y
   n1 <- dotGridGradient x1 y0 x y
   let ix0 = lerp n0 n1 sx
-  n0 <- dotGridGradient x0 y1 x y
-  n1 <- dotGridGradient x1 y1 x y
-  let ix1 = lerp n0 n1 sx
-  pure (lerp ix0 ix1 sy)
+  n0' <- dotGridGradient x0 y1 x y
+  n1' <- dotGridGradient x1 y1 x y
+  let ix1 = lerp n0' n1' sx
+  let res' = lerp ix0 ix1 sy
+  let res = abs res'
+  pure res
   where
     lerp a0 a1 w = (1.0 - w) * a0 + w * a1
