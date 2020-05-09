@@ -1,5 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- :set -fobject-code in GHCi
 module Picture where
@@ -13,6 +14,9 @@ import Control.Monad
 import Data.Bits hiding (rotate)
 import Data.Function
 import Foreign.Marshal.Array
+
+import Data.Char
+import Data.Complex
 
 default (Int, Float, Integer)
 
@@ -231,23 +235,23 @@ static :: Image c -> Anim c
 static = const
 
 -- The main animation to run.
+-- mainAnim = static . renderFrac $ mandel
 mainAnim = static fig8
 
 calculate (x, y, t) = adjust (mainAnim t') (x', y')
-   
   where
     duration = 5000 -- Duration of the animation in ms
-    range = 2 * pi  -- Time range of the animation
+    range = 2 * pi -- Time range of the animation
     -- Time normalized from 0 to 1
     normalizedTime = fromIntegral (t `mod` duration) / fromIntegral duration
     scaledTime = range * normalizedTime
+    -- scaledTime = fromIntegral t / 10000
     (x', y', t') = (fromIntegral x, fromIntegral y, scaledTime)
     adjust = adjustToWindow
     -- Adjust an image to a window, by translating, scaling and flipping
     adjustToWindow :: Filter c
     adjustToWindow =
-      translate (screenWidth / 2, screenHeight / 2) .
-      uscale 60 . flipY
+      translate (screenWidth / 2, screenHeight / 2) . uscale 60 . flipY
     flipY p (x, y) = p (x, -y)
 
 (screenWidth, screenHeight) = (640, 480)
@@ -262,8 +266,20 @@ fillPixelBuffer arr t = pokeArray arr (map calc l1)
       where
         Color r g b _ = calculate (x, y, t)
 
+fillPixelBufferM ::
+     ((Float, Float) -> Time -> IO Frac) -> Ptr CColor -> Time -> IO ()
+fillPixelBufferM im arr t = do
+  l <- mapM calc l1
+  pokeArray arr l
+  where
+    l1 = [(x, y) | y <- [0 .. screenHeight - 1], x <- [0 .. screenWidth - 1]]
+    calc (x, y) = do
+      Color r g b _ <- lerpC <$> im (x, y) t <*> pure black <*> pure white
+      pure
+        (CColor (truncate (255 * r)) (truncate (255 * g)) (truncate (255 * b)))
+
 checker :: Region
-checker (x, y) = even (truncate x + truncate y)
+checker (x, y) = even (floor x + floor y)
 
 vstrip :: Region
 vstrip (x, y) = abs x <= 1 / 2
@@ -273,7 +289,7 @@ overlay = liftA2 (<>)
 
 -- Sierpinski triangle
 gasket :: Region
-gasket (x, y) = truncate x .|. truncate y == (truncate x :: Integer)
+gasket (x, y) = floor x .|. floor y == (floor x :: Integer)
 
 altRings p = even (truncate (distO p))
 
@@ -433,3 +449,126 @@ wiggleRotate cycles θmax t = invWarp (wiggleRotateP cycles θmax t)
 
 washer :: Float -> Float -> ImageC -> Time -> ImageC
 washer cycles θmax im t = cropRad 1 $ wiggleRotate cycles θmax t $ im
+
+-- data T = T !Int !Int !Int !Double
+-- next_x !w !iw !bw (T bx x y ci)
+--     | y  == w   = Nothing
+--     | bx == bw  = Just (loop_x w x 8 iw ci 0, T 1 0    (y+1)   (iw+ci))
+--     | otherwise = Just (loop_x w x 8 iw ci 0, T (bx+1) (x+8) y ci)
+-- loop_x !w !x !n !iw !ci !b
+--     | x < w = if n == 0
+--                     then b
+--                     else loop_x w (x+1) (n-1) iw ci (b+b+v)
+--     | otherwise = b `shiftL` n
+--   where
+--     v = fractal 0 0 (fromIntegral x * iw - 1.5) ci 50
+-- fractal :: Double -> Double -> Double -> Double -> Int -> Word8
+-- fractal !r !i !cr !ci !k
+--     | r2 + i2 > 4 = 0
+--     | k == 0      = 1
+--     | otherwise   = fractal (r2-i2+cr) ((r+r)*i+ci) cr ci (k-1)
+--   where
+--     (!r2,!i2) = (r*r,i*i)
+-- Mandelbrot set
+-- Constants
+maxIter :: Int -- Max iterations
+maxIter = 750
+
+width :: Int -- Image width
+height :: Int -- Image height
+width = 400
+
+height = 400
+
+-- Note: aspect ratio of (minX, minY), (maxX, maxY) must
+-- match aspect ratio of (width, height)
+minX :: Float -- Min x-coordinate of graph
+maxX :: Float -- Max x-coordinate of graph
+minY :: Float -- Min y-coordinate of graph
+maxY :: Float -- Max y-coordinate of graph
+-- For the zoomed in part of the Mandelbrot:
+--minX = -0.826341244461360116
+--maxX = -0.8026423086165848822
+--minY = -0.2167936114403439588
+--maxY = -0.193094675595568725
+--For a full view of the mandelbrot
+minX = -2.5
+
+maxX = 1.5
+
+minY = -2
+
+maxY = 2
+
+-- The actual fractal part. It basically works on a matrix, which we
+-- will call M, that represents a grid of points on the
+-- graph. Essentially, M[i, j] is (xList[j], yList[i])
+xList :: [Float]
+yList :: [Float]
+xList = [minX,(minX + ((maxX - minX) / (fromIntegral width - 1))) .. maxX]
+
+yList =
+  reverse [minY,(minY + ((maxY - minY) / (fromIntegral height - 1))) .. maxY]
+
+etaFraction :: Complex Float -> Float
+etaFraction z = (log (log (magnitude z))) / log 2
+
+smoothEta :: Int -> Complex Float -> Float -- Smooth escape time algorithm value
+smoothEta iter z = (fromIntegral iter - etaFraction z) / fromIntegral maxIter
+
+-- Gets the color for the point, in range [0, 1]
+color :: Int -> Complex Float -> Float
+color iter z = smoothEta iter z -- Smooth escape time algorithm (and invert)
+
+-- color iter z = fromIntegral iter / fromIntegral maxIter
+interpolate :: Float -> Int -- Adds an interpolation curve for interpolating color
+interpolate v = truncate ((v ^ 12) * 255) -- Polynomial curve
+
+-- interpolate v = chr (truncate(v * 255)) -- Linear
+-- The actual fractal algorithm!
+frac :: Complex Float -> Complex Float -> Int -> Int
+frac c@(x :+ y) z iter
+  | iter >= maxIter = 255 -- never escaped, return color value of 255
+  | let p = sqrt ((x - 0.25) ^ 2 + y ^ 2)
+     in x <= p - 2 * p ^ 2 + 0.25 && (x + 1) ^ 2 + y ^ 2 <= 0.625 = 255
+  | otherwise =
+    let z' = z * z + c
+     in if ((realPart z') * (realPart z') + (imagPart z') * (imagPart z')) > 4
+          then interpolate (color iter z')
+          else frac c z' (iter + 1)
+
+mandel :: Image Frac
+mandel (x, y) = fromIntegral (frac (x :+ y) (0 :+ 0) 0) / 255
+
+foreign import ccall "render.h" randomFloat :: Float -> IO Float
+
+dotGridGradient :: Int -> Int -> Float -> Float -> IO Float
+dotGridGradient ix iy x y = do
+  (v1, v2) <- gradient iy ix
+  let c1 = dx * v1
+  let c2 = dy * v2
+  pure (c1 + c2)
+  where
+    gradient y x = do
+      p <- randomFloat 1.0
+      pure (p, sqrt (1 - p ^ 2))
+    dx = x - fromIntegral ix
+    dy = y - fromIntegral iy
+
+perlin :: Image (IO Frac)
+perlin (x, y) = do
+  let x0 = truncate x
+  let x1 = x0 + 1
+  let y0 = truncate y
+  let y1 = y0 + 1
+  let sx = x - fromIntegral x0
+  let sy = y - fromIntegral y0
+  n0 <- dotGridGradient x0 y0 x y
+  n1 <- dotGridGradient x1 y0 x y
+  let ix0 = lerp n0 n1 sx
+  n0 <- dotGridGradient x0 y1 x y
+  n1 <- dotGridGradient x1 y1 x y
+  let ix1 = lerp n0 n1 sx
+  pure (lerp ix0 ix1 sy)
+  where
+    lerp a0 a1 w = (1.0 - w) * a0 + w * a1

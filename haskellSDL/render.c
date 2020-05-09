@@ -1,16 +1,21 @@
-// Configurable setting
+#include "render.h"
+#include <SDL2/SDL.h>
 #define USE_HASKELL_EXPORTS
 #ifdef USE_HASKELL_EXPORTS
 #include "Picture_stub.h"
 #include <HsFFI.h>
 #endif
 
-#include <SDL2/SDL.h>
-#include <stdbool.h>
-#include <stdio.h>
 #include "Timing.h"
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
+float randomFloat(float h) {
+  srand((unsigned int)time(NULL));
+  return ((float)rand() / (float)(RAND_MAX)) * h;
+}
+// Configurable setting
 // Configurable setting
 // #define USE_ALPHA
 
@@ -79,10 +84,10 @@ int render(SDL_Renderer *renderer, SDL_Texture *screen, int t) {
   return 0;
 }
 
-int main(int argc, char **argv) {
+int cMain() {
 #ifdef USE_HASKELL_EXPORTS
   // Initialize the Haskell runtime system.
-  hs_init(&argc, &argv);
+  // hs_init(&argc, &argv);
 #endif
 
   // The window we'll be rendering to
@@ -99,7 +104,7 @@ int main(int argc, char **argv) {
 
   // FpsLimiter
   FpsLimiter fpsLimiter;
-  
+
   // Set the FPS.
   FpsLimiter_init(&fpsLimiter, 60.0f);
 
@@ -111,9 +116,9 @@ int main(int argc, char **argv) {
   }
 
   // Create window
-  window = SDL_CreateWindow(NULL, SDL_WINDOWPOS_UNDEFINED,
-                            SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-                            SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+  window =
+      SDL_CreateWindow(NULL, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                       SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
   if (window == NULL) {
     fprintf(stderr, "Window could not be created! SDL_Error: %s\n",
             SDL_GetError());
@@ -184,7 +189,6 @@ int main(int argc, char **argv) {
     if (quit)
       break;
 
-
     // Render
     render(renderer, screen, t);
 
@@ -203,7 +207,7 @@ int main(int argc, char **argv) {
 
 #ifdef USE_HASKELL_EXPORTS
   // De-initialize the Haskell runtime system.
-  hs_exit();
+  // hs_exit();
 #endif
   return 0;
 }
