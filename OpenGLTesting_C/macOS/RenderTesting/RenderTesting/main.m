@@ -51,7 +51,7 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
     
     CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
     
-    CFDataRef rgbData = CFDataCreateWithBytesNoCopy(NULL, pixelData, size, NULL);
+    CFDataRef rgbData = CFDataCreateWithBytesNoCopy(NULL, pixelData, size, NULL); // Last argument is: "The allocator to use to deallocate the external buffer when the CFData object is deallocated. If the default allocator is suitable for this purpose, pass NULL or kCFAllocatorDefault. If you do not want the created CFData object to deallocate the buffer (that is, you assume responsibility for freeing it yourself), pass kCFAllocatorNull." ( https://developer.apple.com/documentation/corefoundation/1541971-cfdatacreatewithbytesnocopy?language=objc )
     
     CGDataProviderRef provider = CGDataProviderCreateWithCFData(rgbData);
     
@@ -120,6 +120,7 @@ int main(int argc, const char * argv[]) {
         CGImageRef img = createBuffer(pixelData, SCREEN_WIDTH, SCREEN_HEIGHT, _32BitsPerPixel);
         // //
         
+        pixelData[6] = 2; // This actually affects it! Wow.
 
         NSRect screenRect = [[NSScreen mainScreen] frame];
 
@@ -174,7 +175,7 @@ int main(int argc, const char * argv[]) {
         }
         
         view->imageRef = nil;
-        CGImageRelease(img);
+        CGImageRelease(img); // Don't need to release the memory for pixelData since we passed NULL as the last argument to CFDataCreateWithBytesNoCopy.
     }
     return 0;
 }
