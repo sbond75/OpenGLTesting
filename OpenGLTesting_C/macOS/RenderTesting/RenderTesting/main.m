@@ -35,6 +35,41 @@ typedef enum ColorResolution {
     _32BitsPerPixel = 8 // RGBA (or RGBX which would mean alpha is ignored, not just RGB since it would use 24 bits per pixel which is worse for performance than aligning to 32-bit boundaries.)
 } ColorResolution;
 
+// [createBuffer: Private: Callbacks for Core Graphics] //
+
+// Gives Core Graphics access to the data to be used in the CGImage for the CGDataProvider that is "direct".
+// "info" is "the same pointer you supplied to CGDataProviderCreateDirectAccess." ( https://developer.apple.com/documentation/coregraphics/cgdataprovidergetbytepointercallback?language=objc )
+const void * _Nullable getBytePointer(void *info) {
+    return info;
+}
+
+// "CGDataProviderReleaseBytePointerCallback
+// A callback function that releases the pointer Core Graphics obtained by calling CGDataProviderGetBytePointerCallback."
+void releaseBytePointer(void *info, const void *pointer) {
+    // Do nothing, because we don't need this
+    printf("Free\n"); // "You must not move or modify the provider data until Core Graphics calls your CGDataProviderReleaseBytePointerCallback function."
+}
+
+/* // https://developer.apple.com/documentation/coregraphics/cgdataprovidergetbytesatpositioncallback?language=objc
+size_t getBytesAtPosition(void *info, void *buffer, off_t pos, size_t cnt) {
+    // Not sure if this works:
+    memcpy(buffer + pos, info, cnt);
+    return cnt;
+} */
+
+// https://developer.apple.com/documentation/coregraphics/cgdataproviderdirectcallbacks?language=objc , "For the callback to work, one of the getBytePointer and getBytesAtPosition parameters must be non-NULL. If both are non-NULL, then getBytePointer is used to access the data."
+CGDataProviderDirectCallbacks callbacks = {
+    .getBytePointer = getBytePointer,
+    .getBytesAtPosition = NULL,
+    .releaseBytePointer = releaseBytePointer,
+    // "CGDataProviderReleaseInfoCallback
+    // A callback function that releases any private data or resources associated with the data provider."
+    .releaseInfo = NULL,
+    .version = 0 // "The version of this structure. It should be set to 0." ( https://developer.apple.com/documentation/coregraphics/cgdataproviderdirectcallbacks?language=objc )
+};
+
+// //
+
 // pixelData is of size (width * height * numberOfBytesPerPixel).
 // The returned image must be freed with CGImageRelease().
 CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorResolution colorRes) {
@@ -52,9 +87,9 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
     
     CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
     
-    CFDataRef rgbData = CFDataCreateWithBytesNoCopy(NULL, pixelData, size, NULL); // Last argument is: "The allocator to use to deallocate the external buffer when the CFData object is deallocated. If the default allocator is suitable for this purpose, pass NULL or kCFAllocatorDefault. If you do not want the created CFData object to deallocate the buffer (that is, you assume responsibility for freeing it yourself), pass kCFAllocatorNull." ( https://developer.apple.com/documentation/corefoundation/1541971-cfdatacreatewithbytesnocopy?language=objc )
+    //CFDataRef rgbData = CFDataCreateWithBytesNoCopy(NULL, pixelData, size, NULL); // Last argument is: "The allocator to use to deallocate the external buffer when the CFData object is deallocated. If the default allocator is suitable for this purpose, pass NULL or kCFAllocatorDefault. If you do not want the created CFData object to deallocate the buffer (that is, you assume responsibility for freeing it yourself), pass kCFAllocatorNull." ( https://developer.apple.com/documentation/corefoundation/1541971-cfdatacreatewithbytesnocopy?language=objc )
     
-    CGDataProviderRef provider = CGDataProviderCreateWithCFData(rgbData);
+    CGDataProviderRef provider = CGDataProviderCreateDirect(pixelData, size, &callbacks);
     
     size_t bitsPerComponent = (size_t)colorRes;
     size_t bitsPerPixel = numBytesPerPixel * 8;
@@ -77,9 +112,9 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
     CGImageRef rgbImageRef = CGImageCreate(width, height, bitsPerComponent, bitsPerPixel, pitch, colorspace, bitmapInfo, provider, decodeArray, shouldInterpolate, intent);
 #undef decodeArray
     
-    CFRelease(rgbData);
+    //CFRelease(rgbData);
     
-    CGDataProviderRelease(provider);
+    CGDataProviderRelease(provider); // [...]"Release" decrements the retain count.
     
     CGColorSpaceRelease(colorspace);
     
