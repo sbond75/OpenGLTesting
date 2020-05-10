@@ -91,7 +91,8 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
 @interface CustomView: NSView {
 @public
     CGImageRef imageRef;
-    UInt8* pixelDataTest;
+    UInt8* pixelData;
+    size_t counter;
 }
 @end
 
@@ -99,15 +100,19 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
 - (BOOL)opaque {
     return YES; // Performance boost
 }
+
+// https://www.objc.io/issues/14-mac/appkit-for-uikit-developers/ : "But in AppKit, you shouldn’t touch the layer. If you want to interact with the layer in such ways, then you have to go one step further. Overriding NSView‘s wantsUpdateLayer method to return YES enables you to change the layer’s properties. If you do this though, AppKit will no longer call the view’s drawRect: method. Instead, updateLayer will be called during the view update cycle, and this is where you can modify the layer."
 - (void)drawRect:(NSRect)dirtyRect {
     size_t size = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof_Color;
     for(size_t ui = 0; ui < size; ui++) {
-        pixelDataTest[ui] = 1; // This also works!... So does this mean we are using software rendering? Wow...
+        pixelData[ui] = 1 + counter; // [Update: strangely, this stops working after we render the image...] This also works!... So does this mean we are using software rendering? Wow...
     }
     
+    counter += 15;
+    
     // https://stackoverflow.com/questions/3424103/drawing-image-with-cgimage
-    CGContextRef ctx = [NSGraphicsContext currentContext].CGContext;
-    CGContextDrawImage(ctx, dirtyRect, imageRef);
+    CGContextRef ctx = [NSGraphicsContext currentContext].CGContext; // Get the current Core Graphics context being used for this drawRect function.
+    CGContextDrawImage(ctx, dirtyRect, imageRef); // Draw our image.
 }
 @end
 
@@ -150,7 +155,8 @@ int main(int argc, const char * argv[]) {
         
         CustomView* view = [[CustomView alloc] init];
         view->imageRef = img;
-        view->pixelDataTest = pixelData;
+        view->pixelData = pixelData;
+        view->counter = 0;
         [view setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
         [window setContentView: view]; // or [window addSubview]
         [window makeKeyAndOrderFront: nil];
@@ -161,17 +167,20 @@ int main(int argc, const char * argv[]) {
         //NSLog(@"%d", window.contentView); // -> Exists
         //NSLog(@"%d", window.contentView.opaque); // Set to YES for high performance
         //[is private:] window.contentView opaque = YES;
-        //NSLog(@"%d", window.opaque); // Set to YES for high performance?
+        //[was YES already:] NSLog(@"%d", window.opaque); // Set to YES for high performance?
         
         //CoreSurfaceBufferRef screenSurface = createBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
         //CoreSurfaceBufferLock(screenSurface, 3);
-
+        
+        NSDate* distantPast = [NSDate distantPast];
         while(Running) {
+            @autoreleasepool { // This inner autoreleasepool will free these resources each frame.
             NSEvent* Event;
             
+            // Run the "run loop" for a bit.
             do {
                 Event = [NSApp nextEventMatchingMask: NSEventMaskAny
-                                           untilDate: nil
+                                           untilDate: distantPast //distantPast prevents blocking; nil may cause a delay? ( https://stackoverflow.com/questions/985035/anyone-know-why-nexteventmatchingmaskuntildateinmodedequeue-take-many-ms-to )
                                               inMode: NSDefaultRunLoopMode
                                              dequeue: YES];
                 
@@ -180,6 +189,14 @@ int main(int argc, const char * argv[]) {
                         [NSApp sendEvent: Event];
                 }
             } while (Event != nil);
+            }
+            
+            // Render again
+            [view setNeedsDisplay: YES];
+            //[unnecesary according to https://developer.apple.com/documentation/appkit/nswindow/1419609-viewsneeddisplay?language=objc :] [window setViewsNeedDisplay: YES];
+            
+            // Delay for 15 milliseconds, or (15 * 1000) microseconds.
+            usleep(15 * 1000);
         }
         
         view->imageRef = nil;
