@@ -48,6 +48,7 @@ const void * _Nullable getBytePointer(void *info) {
 void releaseBytePointer(void *info, const void *pointer) {
     // Do nothing, because we don't need this
     printf("Free\n"); // "You must not move or modify the provider data until Core Graphics calls your CGDataProviderReleaseBytePointerCallback function."
+    fflush(stdout);
 }
 
 /* // https://developer.apple.com/documentation/coregraphics/cgdataprovidergetbytesatpositioncallback?language=objc
@@ -87,9 +88,10 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
     
     CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
     
-    //CFDataRef rgbData = CFDataCreateWithBytesNoCopy(NULL, pixelData, size, NULL); // Last argument is: "The allocator to use to deallocate the external buffer when the CFData object is deallocated. If the default allocator is suitable for this purpose, pass NULL or kCFAllocatorDefault. If you do not want the created CFData object to deallocate the buffer (that is, you assume responsibility for freeing it yourself), pass kCFAllocatorNull." ( https://developer.apple.com/documentation/corefoundation/1541971-cfdatacreatewithbytesnocopy?language=objc )
+    CFDataRef rgbData = CFDataCreateWithBytesNoCopy(NULL, pixelData, size, NULL); // Last argument is: "The allocator to use to deallocate the external buffer when the CFData object is deallocated. If the default allocator is suitable for this purpose, pass NULL or kCFAllocatorDefault. If you do not want the created CFData object to deallocate the buffer (that is, you assume responsibility for freeing it yourself), pass kCFAllocatorNull." ( https://developer.apple.com/documentation/corefoundation/1541971-cfdatacreatewithbytesnocopy?language=objc )
     
-    CGDataProviderRef provider = CGDataProviderCreateDirect(pixelData, size, &callbacks);
+    //CGDataProviderRef provider = CGDataProviderCreateDirect(pixelData, size, &callbacks);
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData(rgbData);
     
     size_t bitsPerComponent = (size_t)colorRes;
     size_t bitsPerPixel = numBytesPerPixel * 8;
@@ -127,7 +129,7 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
 @public
     CGImageRef imageRef;
     UInt8* pixelData;
-    size_t counter;
+    UInt8 counter;
 }
 @end
 
@@ -140,14 +142,27 @@ CGImageRef createBuffer(UInt8* pixelData, size_t width, size_t height, ColorReso
 - (void)drawRect:(NSRect)dirtyRect {
     size_t size = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof_Color;
     for(size_t ui = 0; ui < size; ui++) {
-        pixelData[ui] = 1 + counter; // [Update: strangely, this stops working after we render the image...] This also works!... So does this mean we are using software rendering? Wow...
+        pixelData[ui] = (UInt8)(1 + counter); // [Update: strangely, this stops working after we render the image...] This also works!... So does this mean we are using software rendering? Wow...
     }
     
     counter += 15;
+    printf("Draw\n");
+    fflush(stdout);
     
     // https://stackoverflow.com/questions/3424103/drawing-image-with-cgimage
     CGContextRef ctx = [NSGraphicsContext currentContext].CGContext; // Get the current Core Graphics context being used for this drawRect function.
     CGContextDrawImage(ctx, dirtyRect, imageRef); // Draw our image.
+    
+    // Another way to draw: assign the CGImageRef to a CALayer's `contents` property.
+    
+    // Yet another few ways:
+    /* https://stackoverflow.com/questions/6222142/using-cgdataprovidercreatewithdata-callback :
+     subclass CALayer, override drawInContext and use CGBitmapContextGetData to get raw data. Don't have much experience with this though, sorry, but if you want to see instant changes on image based on user input, I'd do it this way:
+     
+     Subclass UIView and CALayer which becomes layer for view and displays image. View gets input and image data (from CGBitmapContextGetData) in layer class is manipulated based on input. Even CATiledLayer can be used for huge images in this way. When done with image, just release UIView and replace it with new one. I'll gladly provide help if you need any, just ping here.
+     */
+    
+    // And https://stackoverflow.com/questions/2395650/fastest-way-to-draw-a-screen-buffer-on-the-iphone , https://stackoverflow.com/questions/12187801/how-to-directly-update-pixels-with-cgimage-and-direct-cgdataprovider
 }
 @end
 
