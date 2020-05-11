@@ -1,19 +1,21 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
 #import <Cocoa/Cocoa.h>
 #include "VoodooDraw.h"
+#import "Impl_EEPixelViewerGitHub.h"
 
 // Returns true if success, false if not.
 // Fills the given struct.
 bool getWMInfo(SDL_Window* window, SDL_SysWMinfo* wmInfo) {
-#define info = *wmInfo
+#define info (*wmInfo)
   // https://wiki.libsdl.org/SDL_GetWindowWMInfo
 
-  SDL_VERSION(&info.version); /* initialize info structure with SDL version info */
+  SDL_VERSION(&(info).version); /* initialize info structure with SDL version info */
 
-  if(SDL_GetWindowWMInfo(window,&info)) { /* the call returns true on success */
+  if(SDL_GetWindowWMInfo(window,&(info))) { /* the call returns true on success */
     /* success */
     const char *subsystem = "an unknown system!";
-    switch(info.subsystem) {
+    switch((info).subsystem) {
       case SDL_SYSWM_UNKNOWN:   break;
       case SDL_SYSWM_WINDOWS:   subsystem = "Microsoft Windows(TM)";  break;
       case SDL_SYSWM_X11:       subsystem = "X Window System";        break;
@@ -36,9 +38,9 @@ bool getWMInfo(SDL_Window* window, SDL_SysWMinfo* wmInfo) {
     }
 
     SDL_Log("This program is running SDL version %d.%d.%d on %s",
-        (int)info.version.major,
-        (int)info.version.minor,
-        (int)info.version.patch,
+        (int)((info).version.major),
+        (int)((info).version.minor),
+        (int)((info).version.patch),
         subsystem);
     return true;
   } else {
@@ -49,6 +51,7 @@ bool getWMInfo(SDL_Window* window, SDL_SysWMinfo* wmInfo) {
 #undef info
 }
 
+#if 0
 // https://github.com/spurious/SDL-mirror/blob/master/src/video/cocoa/SDL_cocoawindow.m
 /* @interface SDLView : NSView {
     SDL_Window *_sdlWindow;
@@ -154,5 +157,35 @@ VoodooDrawState test(SDL_Window* window) {
 
         //CGBitmapContextCreate()
 
+    }
+}
+#endif
+
+VoodooDrawState attachDisplayLinkedPixelRendererToWindow(SDL_Window* window, size_t width, size_t height) {
+    SDL_SysWMinfo info;
+    if (!getWMInfo(window, &info)) {
+        VoodooDrawState ret = {.screenSurface = NULL};
+        return ret;
+    }
+    
+    @autoreleasepool {
+        NSWindow* nsWindow = info.info.cocoa.window;
+        NSView* view = /*(SDLView*)*/nsWindow.contentView; // https://developer.apple.com/documentation/appkit/nswindow/1419160-contentview?language=objc
+        
+        CustomView* customView = [[CustomView alloc] initWithFrame: [view frame] pixelBufferWidth: width pixelBufferHeight: height];
+        [view addSubview: customView];
+        
+        /* objc_property_attribute_t type = { "T", "@\"CADisplayLink\"" };
+        objc_property_attribute_t ownership = { "C", "" }; // C = copy
+        objc_property_attribute_t backingivar  = { "V", "_privateName" };
+        objc_property_attribute_t attrs[] = { type, ownership, backingivar };
+        class_addProperty(SDLView.class, "") */
+        //CGContextRef myContext = [[NSGraphicsContext currentContext] graphicsPort];
+        
+        //CGBitmapContextCreate()
+        
+        
+        VoodooDrawState ret = {.screenSurface = customView->pixelBuffer};
+        return ret;
     }
 }
