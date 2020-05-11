@@ -1,41 +1,8 @@
-// Configurable setting
-#define USE_HASKELL_EXPORTS
-#ifdef USE_HASKELL_EXPORTS
-#include "Picture_stub.h"
-#include <HsFFI.h>
-#endif
+#include "Config.h"
+#ifndef USE_CUSTOM_RENDERER_EEPIXELVIEWER
 
 #include <SDL2/SDL.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include "Timing.h"
-#include <stdint.h>
-
-// Configurable setting
-// #define USE_ALPHA
-
-// Screen dimension constants
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-
-typedef struct Color {
-  Uint8 r, g, b
-#ifdef USE_ALPHA
-      ,
-      a
-#endif
-      ;
-} Color;
-
-Uint8 calcA(int x, int y, int t) { return 0; }
-#ifndef USE_HASKELL_EXPORTS
-Uint8 calcR_(x, y, t) { return x + 20; }
-Uint8 calcG_(x, y, t) { return y + 40; }
-Uint8 calcB_(x, y, t) { return y + 1; }
-#define calcR calcR_
-#define calcG calcG_
-#define calcB calcB_
-#endif
+#include "Misc.h"
 
 // t is time.
 int render(SDL_Renderer *renderer, SDL_Texture *screen, int t) {
@@ -209,3 +176,5 @@ int main(int argc, char **argv) {
 #endif
   return 0;
 }
+
+#endif // USE_CUSTOM_RENDERER_EEPIXELVIEWER

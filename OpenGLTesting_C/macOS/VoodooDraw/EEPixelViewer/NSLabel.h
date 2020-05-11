@@ -1,17 +1,15 @@
+// https://stackoverflow.com/questions/20169298/xcode-doesnt-recognize-nslabel
 //
 //  NSLabel.h
-//  Xcode
 //
-//  Created by sbond75 on 5/9/20.
-//  Copyright © 2020 sbond75. All rights reserved.
+//  Created by Axel Guilmin on 11/5/14.
 //
 
-#import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
-NS_ASSUME_NONNULL_BEGIN
+@interface NSLabel : NSTextField
 
-@interface NSLabel : NSObject
+@property (nonatomic, assign) CGFloat fontSize;
+@property (nonatomic, strong) NSString *text;
 
 @end
-
-NS_ASSUME_NONNULL_END
