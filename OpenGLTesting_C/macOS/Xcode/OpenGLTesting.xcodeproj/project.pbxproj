@@ -20,6 +20,7 @@
 		304CD31024690689000A30F2 /* PixelViewer_YpCbCr_3P.glsl in CopyFiles */ = {isa = PBXBuildFile; fileRef = 304CD3082469063C000A30F2 /* PixelViewer_YpCbCr_3P.glsl */; };
 		304CD31124690689000A30F2 /* PixelViewer_YpCbCrA_1P.glsl in CopyFiles */ = {isa = PBXBuildFile; fileRef = 304CD3092469063C000A30F2 /* PixelViewer_YpCbCrA_1P.glsl */; };
 		304CD31224690689000A30F2 /* VertexShader.glsl in CopyFiles */ = {isa = PBXBuildFile; fileRef = 304CD30A2469063C000A30F2 /* VertexShader.glsl */; };
+		304CD3162469CEBA000A30F2 /* MyOpenGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 304CD3152469CEBA000A30F2 /* MyOpenGLView.m */; };
 		30776FAB2464F22D00F6057E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 30776FA32464F22D00F6057E /* main.c */; };
 		30776FAD2464F22D00F6057E /* Timing.c in Sources */ = {isa = PBXBuildFile; fileRef = 30776FAA2464F22D00F6057E /* Timing.c */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,8 @@
 		304CD3082469063C000A30F2 /* PixelViewer_YpCbCr_3P.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = PixelViewer_YpCbCr_3P.glsl; sourceTree = "<group>"; };
 		304CD3092469063C000A30F2 /* PixelViewer_YpCbCrA_1P.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = PixelViewer_YpCbCrA_1P.glsl; sourceTree = "<group>"; };
 		304CD30A2469063C000A30F2 /* VertexShader.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = VertexShader.glsl; sourceTree = "<group>"; };
+		304CD3142469CEBA000A30F2 /* MyOpenGLView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyOpenGLView.h; sourceTree = "<group>"; };
+		304CD3152469CEBA000A30F2 /* MyOpenGLView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MyOpenGLView.m; sourceTree = "<group>"; };
 		30776F772464EE8400F6057E /* Xcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Xcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		30776FA22464F22D00F6057E /* Timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Timing.h; path = ../Timing.h; sourceTree = "<group>"; };
 		30776FA32464F22D00F6057E /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../main.c; sourceTree = "<group>"; };
@@ -142,6 +145,15 @@
 			path = Shaders;
 			sourceTree = "<group>";
 		};
+		304CD3132469CEA2000A30F2 /* TestOpenGLView */ = {
+			isa = PBXGroup;
+			children = (
+				304CD3142469CEBA000A30F2 /* MyOpenGLView.h */,
+				304CD3152469CEBA000A30F2 /* MyOpenGLView.m */,
+			);
+			path = TestOpenGLView;
+			sourceTree = "<group>";
+		};
 		30776F682464EE0900F6057E = {
 			isa = PBXGroup;
 			children = (
@@ -170,6 +182,7 @@
 		30776FA52464F22D00F6057E /* VoodooDraw */ = {
 			isa = PBXGroup;
 			children = (
+				304CD3132469CEA2000A30F2 /* TestOpenGLView */,
 				304CD2E924679408000A30F2 /* EEPixelViewer */,
 				30776FA62464F22D00F6057E /* Headers */,
 				304CD2E7246793D3000A30F2 /* Impl_EEPixelViewerGitHub.m */,
@@ -291,6 +304,7 @@
 				30776FAD2464F22D00F6057E /* Timing.c in Sources */,
 				304CD2FA2467A4D6000A30F2 /* NSLabel.m in Sources */,
 				304CD2F72467940F000A30F2 /* OGLProgramManager.m in Sources */,
+				304CD3162469CEBA000A30F2 /* MyOpenGLView.m in Sources */,
 				304CD2F62467940F000A30F2 /* EEPixelViewer.m in Sources */,
 				304CD2FD2468F8A8000A30F2 /* main.m in Sources */,
 				304CD2E8246793D4000A30F2 /* Impl_EEPixelViewerGitHub.m in Sources */,

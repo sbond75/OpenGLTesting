@@ -6,6 +6,7 @@
 
     self = [ super initWithFrame: rect ];
     if (nil != self) {
+        self.fpsIndicator = YES;
         self.pixelFormat = kCVPixelFormatType_32RGBA;
         self.sourceImageSize = CGSizeMake(width, height);
         plane.width = width; //1024;
@@ -38,6 +39,10 @@ static CVReturn renderCallback(CVDisplayLinkRef displayLink,
 }
 
 -(void)setupDisplayLink {
+    // Synchronize buffer swaps with vertical refresh rate
+    GLint swapInt = 1;
+    [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
+    
     CGDirectDisplayID   displayID = CGMainDisplayID();
     CVReturn            error = kCVReturnSuccess;
     error = CVDisplayLinkCreateWithCGDisplay(displayID, &displayLink);
@@ -47,6 +52,13 @@ static CVReturn renderCallback(CVDisplayLinkRef displayLink,
         displayLink = NULL;
     }
     CVDisplayLinkSetOutputCallback(displayLink, renderCallback, (__bridge void *)self);
+    
+    // Set the display link for the current renderer
+    CGLContextObj cglContext = [[self openGLContext] CGLContextObj];
+    CGLPixelFormatObj cglPixelFormat = [self.openGLContext.pixelFormat CGLPixelFormatObj];
+    CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink, cglContext, cglPixelFormat);
+    
+    // Activate the display link
     CVDisplayLinkStart(displayLink);
 }
 
@@ -55,18 +67,20 @@ static CVReturn renderCallback(CVDisplayLinkRef displayLink,
     /* [self setWantsLayer: YES];
     [self.layer setDrawsAsynchronously:YES]; */
     
-    [self displayPixelBufferPlanes: &plane count: 1];
-    //[self.openGLContext flushBuffer];
-    [self setNeedsDisplay:YES];
-}
-
--(CVReturn)renderCallback: (const CVTimeStamp*)inOutputTime {
     // Greyscale test
     size_t size = plane.rowBytes * plane.height;
     for(size_t ui = 0; ui < size; ui++) {
-        self->pixelBuffer[ui] = counter;
+        self->pixelBuffer[ui] = 1+ui+counter;
     }
     
+    [self displayPixelBufferPlanes: &plane count: 1];
+    //[self.openGLContext flushBuffer];
+    //[self setNeedsDisplay:YES];
+    
+}
+
+// Gets the frame for a given time, inOutputTime. ( https://developer.apple.com/library/archive/qa/qa1385/_index.html )
+-(CVReturn)renderCallback: (const CVTimeStamp*)inOutputTime {
     counter += 20;
     
     // https://medium.com/@eyeplum/cvdisplaylink-a0f878f8f053

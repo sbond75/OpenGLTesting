@@ -114,11 +114,19 @@ typedef enum ContentModeCustom {
 
 #pragma mark - Initialization Code
 
+-(NSOpenGLContext*) makeContext {
+    NSOpenGLContext* ctx = [[NSOpenGLContext alloc] initWithFormat: [EEPixelViewer defaultPixelFormat] shareContext:nil];
+    NSOpenGLContextParameter vals[] = {
+        1
+    };
+    [ctx setValues:vals forParameter:NSOpenGLContextParameterSwapInterval]; // "The swap interval is represented as one long. If the swap interval is set to 0 (the default), the flushBuffer method executes as soon as possible, without regard to the vertical refresh rate of the monitor. If the swap interval is set to 1, the buffers are swapped only during the vertical retrace of the monitor."
+    return ctx;
+}
+
 - (id) initWithCoder:(NSCoder *)aDecoder
 {
     self = [super initWithCoder:aDecoder];
-    NSOpenGLPixelFormatAttribute attributes[1] = { 0 }; // NOTE: Array literals like this is a GNU extension..
-    self.context = [[NSOpenGLContext alloc] initWithFormat: [[NSOpenGLPixelFormat alloc] initWithAttributes: attributes] shareContext:nil];
+    self.context = [self makeContext];
     
     /*
     if (self.context == nil)
@@ -138,15 +146,26 @@ typedef enum ContentModeCustom {
 
 + (NSOpenGLPixelFormat*)defaultPixelFormat
 {
-    NSOpenGLPixelFormatAttribute attribs [] = {
+    NSOpenGLPixelFormatAttribute attribs[] =
+    {
+        NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersionLegacy, // NSOpenGLProfileVersion3_2Core
+        NSOpenGLPFAColorSize    , 24                           ,
+        NSOpenGLPFAAlphaSize    , 8                            ,
+        NSOpenGLPFADoubleBuffer , // TODO: wow, NOT having double buffer here was causing the no rendering issue!...
+        NSOpenGLPFAAccelerated  ,
+        NSOpenGLPFANoRecovery   ,
+        0
+    };
+    //NSOpenGLPixelFormatAttribute attribs[1] = { 0 }; // NOTE: Array literals like this is a GNU extension..
+    //NSOpenGLPixelFormatAttribute attribs [] = {
         //NSOpenGLPFADoubleBuffer,
-        (NSOpenGLPixelFormatAttribute)nil };
+    //    (NSOpenGLPixelFormatAttribute)nil };
     return [(NSOpenGLPixelFormat *)[NSOpenGLPixelFormat alloc]
             initWithAttributes:attribs];
 }
 
 - (id)initWithFrame:(CGRect)frame {
-    self = [self initWithFrame: frame context: [[NSOpenGLContext alloc] initWithFormat:[EEPixelViewer defaultPixelFormat] shareContext:nil]];
+    self = [self initWithFrame: frame context: [self makeContext]];
     return self;
 }
 
@@ -184,9 +203,9 @@ typedef enum ContentModeCustom {
     //[self deleteDrawable];
     //[self bindDrawable];
         
-    [program use];
+    //[program use];
     
-    [self setupShadersForCropAndScaling];
+    //[self setupShadersForCropAndScaling];
     
     [self display];
 
@@ -206,8 +225,8 @@ typedef enum ContentModeCustom {
     
     [super setLayerContentsRedrawPolicy: NSViewLayerContentsRedrawBeforeViewResize]; //[super setContentMode: UIViewContentModeRedraw];
     
-    self.layer.borderColor = [NSColor greenColor].CGColor;
-    self.layer.borderWidth = 2.0;
+    //self.layer.borderColor = [NSColor greenColor].CGColor;
+    //self.layer.borderWidth = 2.0;
     
     // TODO: port these below.
     /*
@@ -217,7 +236,9 @@ typedef enum ContentModeCustom {
     self.drawableMultisample = GLKViewDrawableMultisample4X;
     */
     
-    glGenTextures(4, (GLuint *) &textures);
+    if (textures[0] == 0) {
+        glGenTextures(4, (GLuint *) &textures);
+    }
     
     [self setupVBOs];
 }
@@ -753,17 +774,29 @@ typedef enum ContentModeCustom {
 - (void) drawRect:(CGRect)rect
 {
     // First make sure we don't try to run OGL code in the background -- it crashes the app:
-    if (![NSApplication sharedApplication].active)
-        return;
+    //if (![NSApplication sharedApplication].active)
+    //    return;
 
+    [super drawRect: rect];
+    
     [self.openGLContext makeCurrentContext];
 	
 	[program use];
     
+    [self setupShadersForCropAndScaling];
+    
+    /* int planeCount=1;
+    for (int i = 0; i < planeCount; i++)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, textures[i]);
+    } */
+    
     CGFloat red, green, blue, alpha;
     //[self.backgroundColor getRed: &red green: &green blue: &blue alpha: &alpha];
     //glClearColor(red, green, blue, alpha);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
+    //glClear(GL_COLOR_BUFFER_BIT);
 		
     // Get view dimensions in pixels
     NSRect backingBounds = [self convertRectToBacking:[self bounds]];
@@ -772,17 +805,33 @@ typedef enum ContentModeCustom {
     
 	glViewport(0, 0, (GLsizei) backingPixelWidth/*self.drawableWidth*/, (GLsizei) backingPixelHeight/*self.drawableHeight*/);
 	
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
+    //GLint vao;
+    //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+	
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
     
     if (_fpsIndicator == YES)
         [self updateFPSIndicator];
+    
+    [self.openGLContext flushBuffer];
 }
 
 - (void) setFpsIndicator:(BOOL)fpsIndicator
 {
     if (fpsIndicator == YES)
     {
-        fpsLabel = [[NSLabel alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+        fpsLabel = [[NSLabel alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, 30)]; //[[NSLabel alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+        //fpsLabel.autoresizingMask = NSViewWidthSizable;
+        /* https://stackoverflow.com/questions/2654580/how-to-resize-nstextview-according-to-its-content :
+         NSTextView *textView = [[NSTextView alloc] init];
+         textView.font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+         textView.string = @"Lorem ipsum";
+         
+         [textView.layoutManager ensureLayoutForTextContainer:textView.textContainer];
+         
+         textView.frame = [textView.layoutManager usedRectForTextContainer:textView.textContainer];
+
+         */
         fpsLabel.textColor = [NSColor whiteColor];
         fpsLabel.backgroundColor = [NSColor blackColor];
         [self addSubview: fpsLabel];
@@ -818,11 +867,11 @@ typedef enum ContentModeCustom {
     //if (![NSApplication sharedApplication].active)
     //    return;
     
-    [program use];
+    //[program use];
     
-    [self setupShadersForCropAndScaling];
+    //[self setupShadersForCropAndScaling];
     
-    [super display];
+    [self setNeedsDisplay:YES]; //[super display];
 }
 
 - (void) setContentMode:(ContentModeCustom)contentMode

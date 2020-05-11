@@ -11,6 +11,7 @@
 #include <AppKit/AppKit.h>
 #include "Misc.h"
 #import "VoodooDraw/Impl_EEPixelViewerGitHub.h"
+#import "VoodooDraw/TestOpenGLView/MyOpenGLView.h"
 
 #define sizeof_Color sizeof(Color)
 
@@ -58,16 +59,19 @@ int main(int argc, const char * argv[]) {
         //[window setTitle: @"Handmade Hero"];
         
         CustomView* view = [[CustomView alloc] initWithFrame: initialFrame pixelBufferWidth: w pixelBufferHeight: h];
+        //MyOpenGLView* view = [[MyOpenGLView alloc] initWithFrame: initialFrame];
         
+#if 1
         // Prepare pixels //
         // Greyscale test
         size_t size = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof_Color;
         for(size_t ui = 0; ui < size; ui++) {
-            view->pixelBuffer[ui] = 210;
+            view->pixelBuffer[ui] = 255; //210;
         }
         // //
         
-        view->pixelBuffer[6] = 2; // This actually affects it! Wow.
+        view->pixelBuffer[6] = 2;
+#endif
         
         [view setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
         [window setContentView: view]; // or [window addSubview]
