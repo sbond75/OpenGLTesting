@@ -1,7 +1,8 @@
-OPTIONS=-O3 -optc-O2 -fasm -fforce-recomp
+OPTIONS=-O3 -optc-ffast-math -optc-O2 -fasm -fforce-recomp
 FILES=main.hs Picture.hs render.c Timing.c
 
 all: $(FILES)
+	ghc Picture.hs
 	ghc $(OPTIONS) $(FILES) -lSDL2
 
 run: all
