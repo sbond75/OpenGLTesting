@@ -24,6 +24,13 @@
   Running = false;
 } */
 
+- (void)applicationWillTerminate:(NSNotification *)notification {
+#ifdef USE_HASKELL_EXPORTS
+    // De-initialize the Haskell runtime system.
+    hs_exit();
+#endif
+}
+
 // https://developer.apple.com/documentation/appkit/nsapplicationdelegate/1428381-applicationshouldterminateafterl?language=objc
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
     return YES;
@@ -43,7 +50,12 @@ typedef enum ColorResolution {
 //}
 
 // https://medium.com/@theobendixson/handmade-hero-osx-platform-layer-day-2-b26d6966e214
-int main(int argc, const char * argv[]) {
+int main(int argc, char * argv[]) {
+#ifdef USE_HASKELL_EXPORTS
+    // Initialize the Haskell runtime system.
+    hs_init(&argc, &argv);
+#endif
+    
     @autoreleasepool {
         HandmadeMainWindowDelegate *mainWindowDelegate = [[HandmadeMainWindowDelegate alloc] init];
 
@@ -69,7 +81,7 @@ int main(int argc, const char * argv[]) {
         CustomView* view = [[CustomView alloc] initWithFrame: initialFrame pixelBufferWidth: w pixelBufferHeight: h];
         //MyOpenGLView* view = [[MyOpenGLView alloc] initWithFrame: initialFrame];
         
-#if 1
+#ifndef USE_HASKELL_EXPORTS
         // Prepare pixels //
         // Greyscale test
         size_t size = SCREEN_WIDTH * SCREEN_HEIGHT * sizeof_Color;

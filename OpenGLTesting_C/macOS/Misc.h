@@ -23,7 +23,7 @@ typedef struct Color {
       ;
 } Color;
 
-Uint8 calcA(int x, int y, int t) { return 0; }
+static inline Uint8 calcA(int x, int y, int t) { return 0; }
 #ifndef USE_HASKELL_EXPORTS
 Uint8 calcR_(x, y, t) { return x + 20; }
 Uint8 calcG_(x, y, t) { return y + 40; }

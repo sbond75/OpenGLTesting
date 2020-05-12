@@ -16,6 +16,7 @@
     EEPixelViewerPlane plane;
     UInt8* pixelBuffer;
     UInt8 counter;
+    long long startingMilliseconds;
 }
 
 - (id)initWithFrame:(CGRect)rect pixelBufferWidth:(size_t)width pixelBufferHeight:(size_t)height;

@@ -1,5 +1,8 @@
 #import "Impl_EEPixelViewerGitHub.h"
 
+#include "../Config.h"
+#include "../Misc.h"
+
 @implementation CustomView
 
 - (id)initWithFrame:(CGRect)rect pixelBufferWidth:(size_t)width pixelBufferHeight:(size_t)height {
@@ -7,15 +10,22 @@
     self = [ super initWithFrame: rect ];
     if (nil != self) {
         self.fpsIndicator = YES;
+#ifdef USE_ALPHA
         self.pixelFormat = kCVPixelFormatType_32RGBA;
+#else
+        self.pixelFormat = kCVPixelFormatType_24RGB;
+#endif
         self.sourceImageSize = CGSizeMake(width, height);
         plane.width = width; //1024;
         plane.height = height; //768;
-        plane.rowBytes = plane.width * 4;
+        plane.rowBytes = plane.width * sizeof(Color);
         pixelBuffer = malloc(plane.rowBytes * plane.height);
         plane.data = pixelBuffer;
         
         counter = 0;
+        
+        long long milliseconds = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0); // https://stackoverflow.com/questions/6150422/get-current-date-in-milliseconds
+        startingMilliseconds = milliseconds;
         
         [self setupShadersForCropAndScaling];
         
@@ -69,11 +79,18 @@ static CVReturn renderCallback(CVDisplayLinkRef displayLink,
     /* [self setWantsLayer: YES];
     [self.layer setDrawsAsynchronously:YES]; */
     
+#ifdef USE_HASKELL_EXPORTS
+    // Fill the `pixelBuffer` array:
+    long long milliseconds = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+    long long t = milliseconds - startingMilliseconds;
+    fillPixelBuffer(pixelBuffer, t);
+#else
     // Greyscale test
     size_t size = plane.rowBytes * plane.height;
     for(size_t ui = 0; ui < size; ui++) {
         self->pixelBuffer[ui] = 1+ui+counter;
     }
+#endif
     
     [self displayPixelBufferPlanes: &plane count: 1];
     //[self.openGLContext flushBuffer];
