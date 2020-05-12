@@ -1,5 +1,4 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -238,7 +237,7 @@ static = const
 -- The main animation to run.
 -- mainAnim = static . renderFrac $ mandel
 mainAnim :: Anim Color
-mainAnim = static fig8
+mainAnim = static fig19
 
 calculate (x, y, t) = adjust (mainAnim t') (x', y')
   where
@@ -296,7 +295,7 @@ overlay = liftA2 (<>)
 gasket :: Region
 gasket (x, y) = floor x .|. floor y == (floor x :: Integer)
 
-altRings p = even (truncate (distO p))
+altRings p = even (floor (distO p))
 
 distO (x, y) = sqrt (x * x + y * y)
 
