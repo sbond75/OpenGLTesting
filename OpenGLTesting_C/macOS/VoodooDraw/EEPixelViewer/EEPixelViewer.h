@@ -45,4 +45,6 @@ typedef struct EEPixelViewerPlane
 - (void) displayPixelBufferPlanes:(EEPixelViewerPlane *)planes count:(int)planeCount withCompletion: (void (^)())completionBlock;
 - (void) displayPixelBufferPlanes: (EEPixelViewerPlane *) planes count: (int) planeCount;
 
+- (void) setupShadersForCropAndScaling;
+
 @end

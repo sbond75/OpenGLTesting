@@ -17,6 +17,8 @@
         
         counter = 0;
         
+        [self setupShadersForCropAndScaling];
+        
         [self setupDisplayLink];
     }
 

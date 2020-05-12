@@ -119,7 +119,12 @@ typedef enum ContentModeCustom {
     NSOpenGLContextParameter vals[] = {
         1
     };
-    [ctx setValues:vals forParameter:NSOpenGLContextParameterSwapInterval]; // "The swap interval is represented as one long. If the swap interval is set to 0 (the default), the flushBuffer method executes as soon as possible, without regard to the vertical refresh rate of the monitor. If the swap interval is set to 1, the buffers are swapped only during the vertical retrace of the monitor."
+    //[ctx setValues:vals forParameter:NSOpenGLContextParameterSwapInterval]; // "The swap interval is represented as one long. If the swap interval is set to 0 (the default), the flushBuffer method executes as soon as possible, without regard to the vertical refresh rate of the monitor. If the swap interval is set to 1, the buffers are swapped only during the vertical retrace of the monitor."
+    // This syncs the OpenGL context to the VBL to prevent tearing
+    
+    GLint one = 1;
+    [ctx setValues:&one forParameter:NSOpenGLCPSwapInterval];
+
     return ctx;
 }
 
@@ -779,11 +784,11 @@ typedef enum ContentModeCustom {
 
     [super drawRect: rect];
     
-    [self.openGLContext makeCurrentContext];
+    //[self.openGLContext makeCurrentContext];
 	
 	[program use];
     
-    [self setupShadersForCropAndScaling];
+    //[self setupShadersForCropAndScaling];
     
     /* int planeCount=1;
     for (int i = 0; i < planeCount; i++)

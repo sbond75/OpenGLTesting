@@ -90,11 +90,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.48476"
+            timestampString = "610936633.278999"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "704"
-            endingLineNumber = "704"
+            startingLineNumber = "709"
+            endingLineNumber = "709"
             landmarkName = "-setupShadersForCropAndScaling"
             landmarkType = "7">
          </BreakpointContent>
@@ -122,11 +122,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.485563"
+            timestampString = "610936633.279169"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "192"
-            endingLineNumber = "192"
+            startingLineNumber = "197"
+            endingLineNumber = "197"
             landmarkName = "-setupVBOs"
             landmarkType = "7">
          </BreakpointContent>
@@ -138,11 +138,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.486026"
+            timestampString = "610936633.279269"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "220"
-            endingLineNumber = "220"
+            startingLineNumber = "225"
+            endingLineNumber = "225"
             landmarkName = "-setOpenGLContext:"
             landmarkType = "7">
          </BreakpointContent>
@@ -154,11 +154,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.48646"
+            timestampString = "610936633.279355"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "176"
-            endingLineNumber = "176"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
             landmarkName = "-initWithFrame:context:"
             landmarkType = "7">
          </BreakpointContent>
@@ -170,11 +170,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/Impl_EEPixelViewerGitHub.m"
-            timestampString = "610915251.486894"
+            timestampString = "610936633.279447"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "84"
-            endingLineNumber = "84"
+            startingLineNumber = "86"
+            endingLineNumber = "86"
             landmarkName = "-renderCallback:"
             landmarkType = "7">
          </BreakpointContent>
@@ -186,11 +186,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.4869601"
+            timestampString = "610936633.279533"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "943"
-            endingLineNumber = "943"
+            startingLineNumber = "948"
+            endingLineNumber = "948"
             landmarkName = "-displayPixelBufferPlanes:count:"
             landmarkType = "7">
          </BreakpointContent>
@@ -202,11 +202,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.487386"
+            timestampString = "610936633.2796201"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "802"
-            endingLineNumber = "802"
+            startingLineNumber = "807"
+            endingLineNumber = "807"
             landmarkName = "-drawRect:"
             landmarkType = "7">
          </BreakpointContent>
@@ -218,11 +218,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.488111"
+            timestampString = "610936633.2797019"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "874"
-            endingLineNumber = "874"
+            startingLineNumber = "879"
+            endingLineNumber = "879"
             landmarkName = "-display"
             landmarkType = "7">
          </BreakpointContent>
@@ -234,11 +234,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.488837"
+            timestampString = "610936633.279796"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "778"
-            endingLineNumber = "778"
+            startingLineNumber = "783"
+            endingLineNumber = "783"
             landmarkName = "-drawRect:"
             landmarkType = "7">
          </BreakpointContent>
@@ -250,11 +250,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../VoodooDraw/EEPixelViewer/EEPixelViewer.m"
-            timestampString = "610915251.489586"
+            timestampString = "610936633.279883"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "811"
-            endingLineNumber = "811"
+            startingLineNumber = "816"
+            endingLineNumber = "816"
             landmarkName = "-drawRect:"
             landmarkType = "7">
          </BreakpointContent>

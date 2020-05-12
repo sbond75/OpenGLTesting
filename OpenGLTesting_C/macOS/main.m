@@ -15,15 +15,18 @@
 
 #define sizeof_Color sizeof(Color)
 
-static bool Running = true;
-
 @interface HandmadeMainWindowDelegate: NSObject<NSWindowDelegate>
 @end
 
 @implementation HandmadeMainWindowDelegate
 
-- (void)windowWillClose:(id)sender {
+/* - (void)windowWillClose:(id)sender {
   Running = false;
+} */
+
+// https://developer.apple.com/documentation/appkit/nsapplicationdelegate/1428381-applicationshouldterminateafterl?language=objc
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
+    return YES;
 }
 
 @end
@@ -33,6 +36,11 @@ typedef enum ColorResolution {
     _16BitsPerPixel = 4, // Hopefully 5 bits red, 6 bits green, 5 bits blue. (5 + 6 + 5 = 16 bits per pixel.)
     _32BitsPerPixel = 8 // RGBA (or RGBX which would mean alpha is ignored, not just RGB since it would use 24 bits per pixel which is worse for performance than aligning to 32-bit boundaries.)
 } ColorResolution;
+
+// https://developer.apple.com/documentation/corefoundation/cfrunloopobservercallback?language=objc
+//void myRunLoopObserver(CFRunLoopObserverRef observer, CFRunLoopActivity activity, void *info) {
+//    printf("myRunLoopObserver\n");
+//}
 
 // https://medium.com/@theobendixson/handmade-hero-osx-platform-layer-day-2-b26d6966e214
 int main(int argc, const char * argv[]) {
@@ -88,32 +96,22 @@ int main(int argc, const char * argv[]) {
         //CoreSurfaceBufferRef screenSurface = createBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
         //CoreSurfaceBufferLock(screenSurface, 3);
         
-        NSDate* distantPast = [NSDate distantPast];
-        while(Running) {
-            @autoreleasepool { // This inner autoreleasepool will free these resources each frame.
-            NSEvent* Event;
-            
-            // Run the "run loop" for a bit.
-            do {
-                Event = [NSApp nextEventMatchingMask: NSEventMaskAny
-                                           untilDate: distantPast //distantPast prevents blocking; nil may cause a delay? ( https://stackoverflow.com/questions/985035/anyone-know-why-nexteventmatchingmaskuntildateinmodedequeue-take-many-ms-to )
-                                              inMode: NSDefaultRunLoopMode
-                                             dequeue: YES];
-                
-                switch ([Event type]) {
-                    default:
-                        [NSApp sendEvent: Event];
-                }
-            } while (Event != nil);
-            }
-            
-            // Render again
-            [view setNeedsDisplay: YES];
-            //[unnecesary according to https://developer.apple.com/documentation/appkit/nswindow/1419609-viewsneeddisplay?language=objc :] [window setViewsNeedDisplay: YES];
-            
-            // Delay for 15 milliseconds, or (15 * 1000) microseconds.
-            usleep(15 * 1000);
-        }
+        //NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+        
+        // https://developer.apple.com/documentation/corefoundation/1541546-cfrunloopobservercreate?language=objc
+        // Create a run loop observer and attach it to the run loop.
+        //CFRunLoopObserverContext  context = {0, self, NULL, NULL, NULL}; //<-- any userdata you need.
+        //CFRunLoopObserverRef    observer = CFRunLoopObserverCreate(kCFAllocatorDefault,
+        //    kCFRunLoopExit /*kCFRunLoopAllActivities*/, YES, 0, &myRunLoopObserver, NULL /*&context*/);
+        //CFRunLoopAddObserver([runLoop getCFRunLoop], observer, kCFRunLoopCommonModes);
+        
+        //[runLoop run];
+        
+        NSApplication *app = [NSApplication sharedApplication];
+        [app setDelegate:mainWindowDelegate];
+        [app run];
+        
+        // return NSApplicationMain(argc, argv); // Does the run loop above, etc. but fails in command line programs it seems: says "No Info.plist file in application bundle or no NSPrincipalClass in the Info.plist file, exiting"
     }
     return 0;
 }
