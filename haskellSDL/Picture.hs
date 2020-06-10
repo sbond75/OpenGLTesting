@@ -378,7 +378,7 @@ annulus inner = udisk \\ uscale inner udisk
 radReg :: Int -> Region
 radReg n = test . toPolar
   where
-    test (r, a) = even (truncate (a * fromIntegral n / pi))
+    test (r, a) = even (floor (a * fromIntegral n / pi))
 
 wedgeAnnulus :: Frac -> Int -> Region
 wedgeAnnulus inner n = annulus inner `intersect` radReg n
